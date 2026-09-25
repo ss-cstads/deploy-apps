@@ -90,7 +90,34 @@ jobs:
       - name: Nome da imagem
         if: matrix.context != ''
         id: image
-        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.name }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.name }}"
+          { echo "repo=$repo"; echo "name=$repo:${{ github.sha }}"; } >> "$GITHUB_OUTPUT"
+
+      # Com Dockerfile na pasta: usa o Dockerfile. Sem ele: Buildpacks (Paketo),
+      # que detectam a linguagem (package.json, pom.xml, requirements.txt...).
+      # Só HTML (index.html sem arquivo de linguagem): servido pelo nginx.
+      - name: Como construir
+        if: matrix.context != ''
+        id: mode
+        env:
+          CTX: ${{ matrix.context }}
+        run: |
+          if [ -f "$CTX/Dockerfile" ]; then
+            echo "mode=dockerfile" >> "$GITHUB_OUTPUT"; echo "Build pelo Dockerfile"; exit 0
+          fi
+          echo "mode=buildpacks" >> "$GITHUB_OUTPUT"
+          lang=false
+          for f in package.json pom.xml build.gradle build.gradle.kts requirements.txt \
+                   pyproject.toml Pipfile go.mod composer.json Gemfile Procfile; do
+            [ -e "$CTX/$f" ] && lang=true
+          done
+          compgen -G "$CTX/*.csproj" >/dev/null && lang=true
+          if [ -f "$CTX/index.html" ] && [ "$lang" = false ]; then
+            echo "static=true" >> "$GITHUB_OUTPUT"; echo "Build por Buildpacks: site estático (nginx)"
+          else
+            echo "Build por Buildpacks (sem Dockerfile)"
+          fi
 
       - name: Login no ghcr.io
         if: matrix.context != ''
@@ -100,13 +127,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build e push
-        if: matrix.context != ''
+      - name: Build e push (Dockerfile)
+        if: steps.mode.outputs.mode == 'dockerfile'
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           push: true
           tags: ${{ steps.image.outputs.name }}
+
+      - name: Instalar o pack (Buildpacks)
+        if: steps.mode.outputs.mode == 'buildpacks'
+        uses: buildpacks/github-actions/setup-pack@v6.1.1
+        with:
+          pack-version: 0.40.9
+
+      - name: Build e push (Buildpacks)
+        if: steps.mode.outputs.mode == 'buildpacks'
+        env:
+          CTX: ${{ matrix.context }}
+          IMAGE: ${{ steps.image.outputs.name }}
+          CACHE: ${{ steps.image.outputs.repo }}-cache
+          STATIC: ${{ steps.mode.outputs.static }}
+        run: |
+          args=()
+          [ "$STATIC" = true ] && args+=(--env BP_WEB_SERVER=nginx --env BP_WEB_SERVER_ROOT=.)
+          pack build "$IMAGE" --path "$CTX" \
+            --builder paketobuildpacks/ubuntu-noble-builder --trust-builder \
+            --publish --cache-image "$CACHE" "${args[@]}"
 
   deploy:
     name: Deploy

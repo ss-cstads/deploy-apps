@@ -24,12 +24,26 @@ jobs:
     secrets:
       NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
       APP_ENV: ${{ secrets.APP_ENV }}
-    with:
-      port: 8080
 ```
 
-Troque `8080` pela porta em que o seu app escuta. O repositório também precisa de um
-`Dockerfile` na raiz ([modelos por linguagem](exemplos/dockerfiles)).
+**Não precisa de Dockerfile:** o pipeline reconhece o projeto pelos arquivos dele.
+
+| Projeto | O que o repositório precisa ter |
+|---------|--------------------------------|
+| Node.js | `package.json` com o script `start`; o app escuta em `process.env.PORT` |
+| Python | `requirements.txt` e um arquivo `Procfile`, por exemplo: `web: gunicorn app:app --bind 0.0.0.0:$PORT` |
+| Java | `pom.xml` ou `build.gradle` (Spring Boot funciona direto, na porta 8080) |
+| Site estático | `index.html` na raiz |
+| Go, PHP, .NET, Ruby | os arquivos normais do projeto |
+
+Se o repositório tiver um `Dockerfile`, ele é usado no lugar
+([modelos por linguagem](exemplos/dockerfiles)). Nesse caso, informe a porta do app
+no fim do arquivo acima:
+
+```yaml
+    with:
+      port: 3000
+```
 
 ## 2. Cadastre o seu token
 
@@ -47,7 +61,7 @@ Dentro de `with:`:
 
 | Opção | Padrão | Para que serve |
 |-------|--------|----------------|
-| `port` | `8080` | porta em que o app escuta |
+| `port` | `8080` | porta do app (sem Dockerfile, o app recebe a variável `PORT` com esse valor) |
 | `health` | `/` | rota que responde 200 quando o app está funcionando |
 | `memory` | `256` | memória em MB |
 | `database` | `false` | `true` cria um MySQL; o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
@@ -62,7 +76,7 @@ Copie o conteúdo de uma pasta para a raiz do seu repositório:
 
 | Pasta | O que é |
 |-------|---------|
-| [`exemplos/site`](exemplos/site) | página estática (o mais simples) |
+| [`exemplos/site`](exemplos/site) | página estática, só um `index.html` (o mais simples) |
 | [`exemplos/fullstack-java`](exemplos/fullstack-java) | Angular + Spring Boot + MySQL |
 | [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | Angular + Express + MySQL |
 | [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | Angular + Express/Prisma + MySQL |

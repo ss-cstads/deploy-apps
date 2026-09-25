@@ -127,6 +127,12 @@ job "app" {
         memory = var.memory
       }
 
+      # Porta em que o app deve escutar (convenção dos Buildpacks; apps com
+      # Dockerfile próprio podem ignorar)
+      env {
+        PORT = var.port
+      }
+
       # Os itens de nomad/jobs viram variáveis de ambiente (menos a senha root
       # do MySQL, que só o mysql.nomad.hcl usa). Sem a variable (app sem
       # segredos), o arquivo fica vazio e o app sobe normal.
