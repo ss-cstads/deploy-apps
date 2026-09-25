@@ -1,15 +1,11 @@
 # App do aluno (usado pelo pipeline .github/workflows/deploy.yml).
 #   job "web", serviço <namespace>-app:     público em https://<namespace>.projetos...
 #   job "api", serviço <namespace>-backend: só o <namespace>-app chama
+# O rótulo do job não aceita variável: o pipeline troca o ID ("web"/"api") no JSON.
 # Segredos: Nomad Variable nomad/jobs do namespace (gravada pelo pipeline).
 
 variable "namespace" {
   type = string
-}
-
-variable "job" {
-  type    = string
-  default = "web"
 }
 
 variable "service" {
@@ -49,7 +45,6 @@ variable "database" {
 }
 
 job "app" {
-  name        = var.job
   namespace   = var.namespace
   datacenters = ["dc1"]
   type        = "service"

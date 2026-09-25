@@ -171,18 +171,20 @@ jobs:
       - name: Deploy do backend
         if: inputs.backend != ''
         run: |
-          nomad job run \
-            -var namespace="$NS" -var job=api -var service=backend \
+          nomad job run -output \
+            -var namespace="$NS" -var service=backend \
             -var image="ghcr.io/${GITHUB_REPOSITORY,,}/backend:${{ github.sha }}" \
             -var port="${{ inputs.backend_port }}" \
             -var health="${{ inputs.backend_health }}" \
             -var memory="${{ inputs.backend_memory }}" \
             -var database="${{ inputs.database }}" \
-            .deploy/.github/nomad/app.nomad.hcl
+            .deploy/.github/nomad/app.nomad.hcl \
+            | jq '.Job.ID = "api" | .Job.Name = "api"' > api.json
+          nomad job run -json api.json
 
       - name: Deploy do app
         run: |
-          nomad job run \
+          nomad job run -output \
             -var namespace="$NS" \
             -var image="ghcr.io/${GITHUB_REPOSITORY,,}/app:${{ github.sha }}" \
             -var port="${{ inputs.port }}" \
@@ -190,7 +192,9 @@ jobs:
             -var memory="${{ inputs.memory }}" \
             -var backend="${{ inputs.backend != '' }}" \
             -var database="${{ inputs.database && inputs.backend == '' }}" \
-            .deploy/.github/nomad/app.nomad.hcl
+            .deploy/.github/nomad/app.nomad.hcl \
+            | jq '.Job.ID = "web" | .Job.Name = "web"' > web.json
+          nomad job run -json web.json
 
       - name: Endereço
         run: |
