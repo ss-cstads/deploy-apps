@@ -32,9 +32,11 @@ jobs:
 |---------|--------------------------------|
 | Node.js | `package.json` com o script `start`; o app escuta em `process.env.PORT` |
 | Python | `requirements.txt` e um arquivo `Procfile`, por exemplo: `web: gunicorn app:app --bind 0.0.0.0:$PORT` |
-| Java | `pom.xml` ou `build.gradle` (Spring Boot funciona direto, na porta 8080) |
+| Java | `pom.xml` ou `build.gradle`; usa Java 21, a menos que um `project.toml` peça outra versão ([exemplo](exemplos/api-java-mobile/project.toml)) |
+| PHP | `index.php` na raiz; extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/php)) |
+| Go | `go.mod` (até Go 1.26) |
 | Site estático | `index.html` na raiz |
-| Go, PHP, .NET, Ruby | os arquivos normais do projeto |
+| .NET, Ruby | os arquivos normais do projeto |
 
 Se o repositório tiver um `Dockerfile`, ele é usado no lugar
 ([modelos por linguagem](exemplos/dockerfiles)). Nesse caso, informe a porta do app
@@ -77,6 +79,9 @@ Copie o conteúdo de uma pasta para a raiz do seu repositório:
 | Pasta | O que é |
 |-------|---------|
 | [`exemplos/site`](exemplos/site) | página estática, só um `index.html` (o mais simples) |
+| [`exemplos/php`](exemplos/php) | mural de recados em PHP + MySQL, sem framework |
+| [`exemplos/go`](exemplos/go) | API JSON em Go, só com a biblioteca padrão |
+| [`exemplos/api-java-mobile`](exemplos/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
 | [`exemplos/fullstack-java`](exemplos/fullstack-java) | Angular + Spring Boot + MySQL |
 | [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | Angular + Express + MySQL |
 | [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | Angular + Express/Prisma + MySQL |

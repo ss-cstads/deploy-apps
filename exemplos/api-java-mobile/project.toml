@@ -1,0 +1,7 @@
+# Versão do Java usada pelos Buildpacks (o padrão deles é 21; o pom.xml pede 25)
+[_]
+schema-version = "0.2"
+
+[[io.buildpacks.build.env]]
+name = "BP_JVM_VERSION"
+value = "25"
