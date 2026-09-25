@@ -1,7 +1,7 @@
 # Exemplo: Angular + Express.js + MySQL
 
 App de tarefas com login. Para usar: copie o conteúdo desta pasta para a raiz
-do seu repositório, cadastre os dois secrets ([passo 2](../../README.md#2-cadastre-dois-secrets))
+do seu repositório, cadastre o `NOMAD_TOKEN` ([passo 2](../../README.md#2-cadastre-o-seu-token))
 e faça push.
 
 ```

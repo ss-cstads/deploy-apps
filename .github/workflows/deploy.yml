@@ -6,21 +6,24 @@
 #       permissions: { contents: read, packages: write }
 #       uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
 #       secrets:
-#         repo_secrets: ${{ toJSON(secrets) }}
+#         NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+#         APP_ENV: ${{ secrets.APP_ENV }}
 #       with:
 #         port: 3000
 #
-# Secrets do aluno: NOMAD_TOKEN e STUDENT_NAMESPACE. Secrets APP_<NOME> viram a
-# variável de ambiente <NOME> no container. Todos chegam juntos em repo_secrets:
-# "secrets: inherit" não atravessa donos diferentes (aluno -> ss-cstads).
+# Secrets do aluno, passados pelo nome ("secrets: inherit" não atravessa donos
+# diferentes, e mandar toJSON(secrets) é bloqueado pelo GitHub como suspeito):
+#   NOMAD_TOKEN  obrigatório; o namespace sai do nome do token (student-<ns>)
+#   APP_ENV      opcional; linhas NOME=valor viram variáveis de ambiente do app
 name: deploy
 
 on:
   workflow_call:
     secrets:
-      repo_secrets:
-        description: toJSON(secrets) do repositório do aluno
+      NOMAD_TOKEN:
         required: true
+      APP_ENV:
+        required: false
     inputs:
       port:
         description: Porta do app público (ou do frontend)
@@ -109,16 +112,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Conferir secrets
+      - name: Conferir o NOMAD_TOKEN
         env:
-          ALL_SECRETS: ${{ secrets.repo_secrets }}
+          TOKEN: ${{ secrets.NOMAD_TOKEN }}
         run: |
-          token=$(jq -r '.NOMAD_TOKEN // empty' <<<"$ALL_SECRETS")
-          ns=$(jq -r '.STUDENT_NAMESPACE // empty' <<<"$ALL_SECRETS")
-          [ -n "$token" ] || { echo "::error::Falta o secret NOMAD_TOKEN"; exit 1; }
-          [ -n "$ns" ] || { echo "::error::Falta o secret STUDENT_NAMESPACE"; exit 1; }
-          echo "::add-mask::$token"
-          { echo "NOMAD_TOKEN=$token"; echo "NS=$ns"; } >> "$GITHUB_ENV"
+          [ -n "$TOKEN" ] || { echo "::error::Falta o secret NOMAD_TOKEN"; exit 1; }
+          name=$(curl -fsS -H "X-Nomad-Token: $TOKEN" "$NOMAD_ADDR/v1/acl/token/self" | jq -r '.Name // empty') \
+            || { echo "::error::NOMAD_TOKEN inválido"; exit 1; }
+          [[ "$name" == student-* ]] || { echo "::error::NOMAD_TOKEN não é de estudante"; exit 1; }
+          { echo "NOMAD_TOKEN=$TOKEN"; echo "NS=${name#student-}"; } >> "$GITHUB_ENV"
+          echo "Namespace: ${name#student-}"
 
       - name: Instalar Nomad
         run: |
@@ -134,24 +137,24 @@ jobs:
           sparse-checkout: .github/nomad
 
       # Segredos do app na Nomad Variable nomad/jobs (lida por todos os jobs do
-      # namespace): APP_<NOME> do GitHub + SECRET_KEY e senhas do banco, geradas
-      # uma única vez (o MySQL grava as senhas ao inicializar o volume).
+      # namespace): linhas NOME=valor do APP_ENV + SECRET_KEY e senhas do banco,
+      # geradas uma única vez (o MySQL grava as senhas ao inicializar o volume).
       - name: Segredos do app
         env:
-          ALL_SECRETS: ${{ secrets.repo_secrets }}
+          APP_ENV: ${{ secrets.APP_ENV }}
           DATABASE: ${{ inputs.database }}
         run: |
           current=$(nomad var get -namespace "$NS" -out json nomad/jobs 2>/dev/null | jq -c '.Items // {}') || true
           [ -n "$current" ] || current='{}'
           gen() { openssl rand -hex "$1"; }
           items=$(jq -c \
-            --argjson app "$(jq -c 'with_entries(select(.key | startswith("APP_")) | .key |= sub("^APP_"; ""))' <<<"$ALL_SECRETS")" \
+            --argjson app "$(printf '%s\n' "$APP_ENV" | tr -d '\r' | jq -Rn '[inputs | capture("^\\s*(?<k>[A-Za-z_][A-Za-z0-9_]*)=(?<v>.*)$")? | {(.k): .v}] | add // {}')" \
             --arg sk "$(gen 32)" --arg dbp "$(gen 16)" --arg dbr "$(gen 16)" --arg db "$DATABASE" '
               . + $app
               | .SECRET_KEY //= $sk
               | if $db == "true" then (.DB_PASSWORD //= $dbp | .DB_ROOT_PASSWORD //= $dbr) else . end
             ' <<<"$current")
-          for v in $(jq -r '.[]' <<<"$items"); do echo "::add-mask::$v"; done
+          jq -r '.[]' <<<"$items" | while IFS= read -r v; do [ -n "$v" ] && echo "::add-mask::$v"; done
           if [ "$items" != "$current" ]; then
             jq -n --argjson items "$items" '{Items: $items}' | nomad var put -namespace "$NS" -force -in json nomad/jobs - >/dev/null
             echo "Segredos atualizados: $(jq -r 'keys | join(", ")' <<<"$items")"

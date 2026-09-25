@@ -22,7 +22,8 @@ jobs:
       packages: write
     uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
     secrets:
-      repo_secrets: ${{ toJSON(secrets) }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      APP_ENV: ${{ secrets.APP_ENV }}
     with:
       port: 8080
 ```
@@ -30,13 +31,10 @@ jobs:
 Troque `8080` pela porta em que o seu app escuta. O repositório também precisa de um
 `Dockerfile` na raiz ([modelos por linguagem](exemplos/dockerfiles)).
 
-## 2. Cadastre dois secrets
+## 2. Cadastre o seu token
 
 No repositório: **Settings → Secrets and variables → Actions → New repository secret**.
-Os valores estão na folha de credenciais que você recebeu:
-
-- `NOMAD_TOKEN`
-- `STUDENT_NAMESPACE`
+Nome: `NOMAD_TOKEN`. Valor: o token da folha de credenciais que você recebeu.
 
 ## 3. Faça push
 
@@ -54,8 +52,9 @@ Dentro de `with:`:
 | `memory` | `256` | memória em MB |
 | `database` | `false` | `true` cria um MySQL; o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
 
-**Senhas e chaves:** crie um secret `APP_ALGUMA_COISA` e o app recebe a variável
-`ALGUMA_COISA`. A variável `SECRET_KEY` já vem pronta (para assinar tokens e sessões).
+**Senhas e chaves:** crie um secret `APP_ENV` com uma linha `NOME=valor` por
+variável (como um arquivo `.env`); o app recebe cada uma como variável de ambiente.
+A variável `SECRET_KEY` já vem pronta (para assinar tokens e sessões).
 
 ## Exemplos prontos
 

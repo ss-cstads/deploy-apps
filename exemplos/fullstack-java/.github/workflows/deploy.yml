@@ -12,7 +12,8 @@ jobs:
       packages: write
     uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
     secrets:
-      repo_secrets: ${{ toJSON(secrets) }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      APP_ENV: ${{ secrets.APP_ENV }}
     with:
       frontend: frontend
       port: 80
