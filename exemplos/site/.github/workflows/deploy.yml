@@ -1,0 +1,16 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      packages: write
+    uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
+    secrets: inherit
+    with:
+      port: 80

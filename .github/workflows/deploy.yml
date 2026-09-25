@@ -4,7 +4,7 @@
 #   jobs:
 #     deploy:
 #       permissions: { contents: read, packages: write }
-#       uses: ss-cstads/nomad-packs/.github/workflows/deploy.yml@v2
+#       uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
 #       secrets: inherit
 #       with:
 #         port: 3000
@@ -53,10 +53,10 @@ on:
 env:
   NOMAD_ADDR: https://nomad.projetos.sapucaia.ifsul.edu.br
   NOMAD_VERSION: "2.0.7"
-  NOMAD_PACK_VERSION: "0.4.2"
-  # Packs da mesma branch deste workflow (alunos usam @v2). Nova major: nova
-  # branch v3 e atualizar aqui.
-  PACKS_REF: v2
+  # Jobs (.github/nomad) da mesma branch deste workflow (alunos usam @v2).
+  # Nova versão incompatível: branch v3 e atualizar aqui.
+  CENTRAL_REPO: ss-cstads/deploy-apps
+  CENTRAL_REF: v2
 
 jobs:
   build:
@@ -111,12 +111,18 @@ jobs:
           [ -n "$NOMAD_TOKEN" ] || { echo "::error::Falta o secret NOMAD_TOKEN"; exit 1; }
           [ -n "$NS" ] || { echo "::error::Falta o secret STUDENT_NAMESPACE"; exit 1; }
 
-      - name: Instalar Nomad e Nomad Pack
+      - name: Instalar Nomad
         run: |
-          base=https://releases.hashicorp.com
-          curl -fsSL "$base/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip" -o nomad.zip
-          curl -fsSL "$base/nomad-pack/${NOMAD_PACK_VERSION}/nomad-pack_${NOMAD_PACK_VERSION}_linux_amd64.zip" -o pack.zip
-          unzip -qo nomad.zip && unzip -qo pack.zip && sudo mv nomad nomad-pack /usr/local/bin/
+          curl -fsSL "https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip" -o nomad.zip
+          unzip -qo nomad.zip && sudo mv nomad /usr/local/bin/
+
+      - name: Jobs do cluster
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.CENTRAL_REPO }}
+          ref: ${{ env.CENTRAL_REF }}
+          path: .deploy
+          sparse-checkout: .github/nomad
 
       # Segredos do app na Nomad Variable nomad/jobs (lida por todos os jobs do
       # namespace): APP_<NOME> do GitHub + SECRET_KEY e senhas do banco, geradas
@@ -144,34 +150,34 @@ jobs:
             echo "Segredos sem mudança"
           fi
 
-      - name: Packs do cluster
-        run: nomad-pack registry add ifsul github.com/ss-cstads/nomad-packs --ref="$PACKS_REF"
-
+      # nomad job run acompanha o deploy: falha se a versão nova não ficar saudável
       - name: Deploy do banco
         if: inputs.database
-        run: nomad-pack run mysql --registry=ifsul --ref="$PACKS_REF" --var namespace="$NS"
+        run: nomad job run -var namespace="$NS" .deploy/.github/nomad/mysql.nomad.hcl
 
       - name: Deploy do backend
         if: inputs.backend != ''
         run: |
-          nomad-pack run api --registry=ifsul --ref="$PACKS_REF" \
-            --var namespace="$NS" \
-            --var image="ghcr.io/${GITHUB_REPOSITORY,,}/backend:${{ github.sha }}" \
-            --var port="${{ inputs.backend_port }}" \
-            --var health_path="${{ inputs.backend_health }}" \
-            --var memory="${{ inputs.backend_memory }}" \
-            --var mysql_upstream="${{ inputs.database }}"
+          nomad job run \
+            -var namespace="$NS" -var job=api -var service=backend \
+            -var image="ghcr.io/${GITHUB_REPOSITORY,,}/backend:${{ github.sha }}" \
+            -var port="${{ inputs.backend_port }}" \
+            -var health="${{ inputs.backend_health }}" \
+            -var memory="${{ inputs.backend_memory }}" \
+            -var database="${{ inputs.database }}" \
+            .deploy/.github/nomad/app.nomad.hcl
 
       - name: Deploy do app
         run: |
-          nomad-pack run web_app --registry=ifsul --ref="$PACKS_REF" \
-            --var namespace="$NS" \
-            --var image="ghcr.io/${GITHUB_REPOSITORY,,}/app:${{ github.sha }}" \
-            --var port="${{ inputs.port }}" \
-            --var health_path="${{ inputs.health }}" \
-            --var memory="${{ inputs.memory }}" \
-            --var backend_upstream="${{ inputs.backend != '' }}" \
-            --var mysql_upstream="${{ inputs.database && inputs.backend == '' }}"
+          nomad job run \
+            -var namespace="$NS" \
+            -var image="ghcr.io/${GITHUB_REPOSITORY,,}/app:${{ github.sha }}" \
+            -var port="${{ inputs.port }}" \
+            -var health="${{ inputs.health }}" \
+            -var memory="${{ inputs.memory }}" \
+            -var backend="${{ inputs.backend != '' }}" \
+            -var database="${{ inputs.database && inputs.backend == '' }}" \
+            .deploy/.github/nomad/app.nomad.hcl
 
       - name: Endereço
         run: |

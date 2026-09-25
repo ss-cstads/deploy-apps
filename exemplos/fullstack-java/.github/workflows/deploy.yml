@@ -1,0 +1,21 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      packages: write
+    uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
+    secrets: inherit
+    with:
+      frontend: frontend
+      port: 80
+      health: /health
+      backend: backend
+      backend_health: /actuator/health
+      database: true
