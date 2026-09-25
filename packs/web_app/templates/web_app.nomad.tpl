@@ -15,8 +15,8 @@ job [[ template "job_name" . ]] {
       }
     }
 
-    # Nome fixo <namespace>-app: e o servico que o Ingress Gateway publica em
-    # https://<namespace>.projetos.sapucaia.ifsul.edu.br (intentions do OpenTofu).
+    # Nome fixo <namespace>-app: e o servico publicado em
+    # https://<namespace>.projetos.sapucaia.ifsul.edu.br
     service {
       name = "[[ var "namespace" . ]]-app"
       port = "http"

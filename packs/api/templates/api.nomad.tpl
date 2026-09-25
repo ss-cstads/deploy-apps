@@ -16,7 +16,7 @@ job [[ template "job_name" . ]] {
     }
 
     # Nome fixo <namespace>-backend: so o <namespace>-app (pack web_app) pode
-    # chamar este servico (intentions do OpenTofu). Nao e exposto na internet.
+    # chamar este servico. Nao e exposto na internet.
     service {
       name = "[[ var "namespace" . ]]-backend"
       port = "http"

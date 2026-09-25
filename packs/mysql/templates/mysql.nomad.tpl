@@ -23,7 +23,7 @@ job [[ template "job_name" . ]] {
     }
 
     # Nome fixo <namespace>-mysql: so o <namespace>-backend (pack api) pode
-    # conectar (intentions do OpenTofu).
+    # conectar.
     service {
       name = "[[ var "namespace" . ]]-mysql"
       port = "mysql"
@@ -58,8 +58,7 @@ job [[ template "job_name" . ]] {
       mode     = "fail"
     }
 
-    # Dynamic host volume criado pelo OpenTofu para cada aluno (disco de dados
-    # do nomad-01): os dados sobrevivem a redeploys e reinicios.
+    # Volume persistente do aluno: os dados sobrevivem a redeploys e reinicios.
     volume "mysql" {
       type            = "host"
       source          = "[[ var "namespace" . ]]-mysql"
