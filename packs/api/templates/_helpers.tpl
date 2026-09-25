@@ -40,11 +40,14 @@ templates sem uma dependencia, e uma copia e mais simples de ler.
 
 [[- /*
 Segredos do Vault (KV secret/students/<namespace>/app) como variaveis de
-ambiente: cada chave vira uma variavel com o nome em maiusculas
-(db_password -> DB_PASSWORD). Sem chaves, nenhum bloco de Vault e gerado.
+ambiente, de duas formas:
+  vault_secrets: cada chave vira uma variavel em maiusculas (db_password -> DB_PASSWORD)
+  secret_env:    variavel = texto com {{chave}} substituido pelo segredo
+                 (DATABASE_URL = "mysql://app:{{db_password}}@127.0.0.1:3306/app")
+Sem nenhum dos dois, nenhum bloco de Vault e gerado.
 */ -]]
 [[ define "vault_secrets" -]]
-[[- if var "vault_secrets" . ]]
+[[- if or (var "vault_secrets" .) (var "secret_env" .) ]]
       identity {
         name        = "vault_default"
         aud         = ["vault.io"]
@@ -63,6 +66,9 @@ ambiente: cada chave vira uma variavel com o nome em maiusculas
 {{ with secret "secret/data/students/[[ var "namespace" . ]]/app" -}}
 [[- range $key := var "vault_secrets" . ]]
 [[ $key | upper ]]={{ index .Data.data "[[ $key ]]" }}
+[[- end ]]
+[[- range $name, $value := var "secret_env" . ]]
+[[ $name ]]=[[ regexReplaceAll "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}" $value "{{ index .Data.data \"${1}\" }}" ]]
 [[- end ]]
 {{ end -}}
 EOH

@@ -64,6 +64,12 @@ variable "vault_secrets" {
   default     = []
 }
 
+variable "secret_env" {
+  description = "Env montada com segredos do Vault: { DATABASE_URL = \"mysql://app:{{db_password}}@127.0.0.1:3306/app\" }."
+  type        = map(string)
+  default     = {}
+}
+
 variable "backend_upstream" {
   description = "Liga o acesso ao pack api (<namespace>-backend) via service mesh."
   type        = bool

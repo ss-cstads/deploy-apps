@@ -39,6 +39,7 @@ Comuns a `web_app` e `api` (o CI injeta `namespace` e `image`):
 | `healthy_deadline` | `3m` / `5m` | prazo para ficar saudável antes do rollback |
 | `env` | `{}` | variáveis de ambiente não secretas |
 | `vault_secrets` | `[]` | chaves de `secret/students/<namespace>/app` → env em MAIÚSCULAS |
+| `secret_env` | `{}` | env montada com segredos: `{ DATABASE_URL = "mysql://app:{{db_password}}@127.0.0.1:3306/app" }` |
 | `job_name` | `web` / `api` | nome do job no namespace |
 
 Só no `web_app`: `backend_upstream` (liga o acesso à `api`) e `backend_local_port` (`8080`).
@@ -47,6 +48,14 @@ Só na `api`: `mysql_upstream` (liga o acesso ao `mysql`) e `mysql_local_port` (
 `mysql`: `image` (`mysql:8.4`), `database` (`app`), `user` (`app`), `cpu` (`500`),
 `memory` (`512`). As senhas vêm do Vault — `db_root_password` e `db_password` — e o
 banco/usuário só são criados no primeiro start, com o volume vazio.
+
+`{{chave}}` em `secret_env` vira o segredo `chave` do Vault — útil quando a aplicação
+espera a senha dentro de uma URL ou com outro nome (`SPRING_DATASOURCE_PASSWORD`).
+Numa URL, use senhas só com letras, números, `-` e `_` (outros caracteres pedem
+URL-encoding).
+
+Exemplos completos (Angular + Spring Boot/Express/Prisma/FastAPI + MySQL) em
+`ss-cstads/github-template`, pasta `exemplos/fullstack-*/deploy/`.
 
 ## Uso na pipeline
 
