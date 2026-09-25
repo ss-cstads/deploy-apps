@@ -21,7 +21,8 @@ jobs:
       contents: read
       packages: write
     uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
-    secrets: inherit
+    secrets:
+      repo_secrets: ${{ toJSON(secrets) }}
     with:
       port: 8080
 ```

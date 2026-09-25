@@ -5,16 +5,22 @@
 #     deploy:
 #       permissions: { contents: read, packages: write }
 #       uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
-#       secrets: inherit
+#       secrets:
+#         repo_secrets: ${{ toJSON(secrets) }}
 #       with:
 #         port: 3000
 #
 # Secrets do aluno: NOMAD_TOKEN e STUDENT_NAMESPACE. Secrets APP_<NOME> viram a
-# variável de ambiente <NOME> no container.
+# variável de ambiente <NOME> no container. Todos chegam juntos em repo_secrets:
+# "secrets: inherit" não atravessa donos diferentes (aluno -> ss-cstads).
 name: deploy
 
 on:
   workflow_call:
+    secrets:
+      repo_secrets:
+        description: toJSON(secrets) do repositório do aluno
+        required: true
     inputs:
       port:
         description: Porta do app público (ou do frontend)
@@ -102,14 +108,17 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
-    env:
-      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
-      NS: ${{ secrets.STUDENT_NAMESPACE }}
     steps:
       - name: Conferir secrets
+        env:
+          ALL_SECRETS: ${{ secrets.repo_secrets }}
         run: |
-          [ -n "$NOMAD_TOKEN" ] || { echo "::error::Falta o secret NOMAD_TOKEN"; exit 1; }
-          [ -n "$NS" ] || { echo "::error::Falta o secret STUDENT_NAMESPACE"; exit 1; }
+          token=$(jq -r '.NOMAD_TOKEN // empty' <<<"$ALL_SECRETS")
+          ns=$(jq -r '.STUDENT_NAMESPACE // empty' <<<"$ALL_SECRETS")
+          [ -n "$token" ] || { echo "::error::Falta o secret NOMAD_TOKEN"; exit 1; }
+          [ -n "$ns" ] || { echo "::error::Falta o secret STUDENT_NAMESPACE"; exit 1; }
+          echo "::add-mask::$token"
+          { echo "NOMAD_TOKEN=$token"; echo "NS=$ns"; } >> "$GITHUB_ENV"
 
       - name: Instalar Nomad
         run: |
@@ -129,7 +138,7 @@ jobs:
       # uma única vez (o MySQL grava as senhas ao inicializar o volume).
       - name: Segredos do app
         env:
-          ALL_SECRETS: ${{ toJSON(secrets) }}
+          ALL_SECRETS: ${{ secrets.repo_secrets }}
           DATABASE: ${{ inputs.database }}
         run: |
           current=$(nomad var get -namespace "$NS" -out json nomad/jobs 2>/dev/null | jq -c '.Items // {}') || true
