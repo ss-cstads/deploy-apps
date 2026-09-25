@@ -127,14 +127,15 @@ job "app" {
         memory = var.memory
       }
 
-      # Todos os itens de nomad/jobs viram variáveis de ambiente. Sem a
-      # variable (app sem segredos), o arquivo fica vazio e o app sobe normal.
+      # Os itens de nomad/jobs viram variáveis de ambiente (menos a senha root
+      # do MySQL, que só o mysql.nomad.hcl usa). Sem a variable (app sem
+      # segredos), o arquivo fica vazio e o app sobe normal.
       template {
         data        = <<EOH
 {{ if nomadVarExists "nomad/jobs" -}}
 {{ with nomadVar "nomad/jobs" -}}
-{{ range .Tuples }}{{ .K }}={{ .V }}
-{{ end -}}
+{{ range .Tuples }}{{ if ne .K "DB_ROOT_PASSWORD" }}{{ .K }}={{ .V }}
+{{ end }}{{ end -}}
 %{ if var.database ~}
 DATABASE_URL=mysql://app:{{ .DB_PASSWORD }}@127.0.0.1:3306/app
 %{ endif ~}
