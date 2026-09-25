@@ -1,7 +1,6 @@
 [[- /*
-Helpers comuns aos packs do cluster IFSul (web_app, api, mysql).
-Os tres packs tem uma copia identica deste arquivo: packs nao compartilham
-templates sem uma dependencia, e uma copia e mais simples de ler.
+Helpers comuns aos packs (web_app, api, mysql). Os tres packs tem uma copia
+identica deste arquivo: packs nao compartilham templates sem uma dependencia.
 */ -]]
 
 [[- define "job_name" -]]
@@ -38,53 +37,45 @@ templates sem uma dependencia, e uma copia e mais simples de ler.
     }
 [[- end -]]
 
-[[- /*
-Segredos do Vault (KV secret/students/<namespace>/app) como variaveis de
-ambiente, de duas formas:
-  vault_secrets: cada chave vira uma variavel em maiusculas (db_password -> DB_PASSWORD)
-  secret_env:    variavel = texto com {{chave}} substituido pelo segredo
-                 (DATABASE_URL = "mysql://app:{{db_password}}@127.0.0.1:3306/app")
-Sem nenhum dos dois, nenhum bloco de Vault e gerado.
-*/ -]]
-[[ define "vault_secrets" -]]
-[[- if or (var "vault_secrets" .) (var "secret_env" .) ]]
-      identity {
-        name        = "vault_default"
-        aud         = ["vault.io"]
-        ttl         = "1h"
-        env         = true
-        file        = true
-        change_mode = "restart"
-      }
+[[- /* Upstream <namespace>-mysql em 127.0.0.1:3306 (dentro de proxy {}). */ -]]
+[[ define "mysql_upstream" -]]
+[[- if var "mysql_upstream" . ]]
 
-      vault {
-        role = "student-[[ var "namespace" . ]]-role"
-      }
-
-      template {
-        data        = <<EOH
-{{ with secret "secret/data/students/[[ var "namespace" . ]]/app" -}}
-[[- range $key := var "vault_secrets" . ]]
-[[ $key | upper ]]={{ index .Data.data "[[ $key ]]" }}
-[[- end ]]
-[[- range $name, $value := var "secret_env" . ]]
-[[ $name ]]=[[ regexReplaceAll "\\{\\{\\s*([A-Za-z0-9_]+)\\s*\\}\\}" $value "{{ index .Data.data \"${1}\" }}" ]]
-[[- end ]]
-{{ end -}}
-EOH
-        destination = "secrets/vault.env"
-        env         = true
-        change_mode = "restart"
-      }
+            # <namespace>-mysql (pack mysql) em 127.0.0.1:3306
+            upstreams {
+              destination_name = "[[ var "namespace" . ]]-mysql"
+              local_bind_port  = 3306
+            }
 [[- end ]]
 [[- end -]]
 
-[[ define "env" -]]
-[[- if var "env" . ]]
-      env {
-[[- range $k, $v := var "env" . ]]
-        [[ $k ]] = [[ $v | quote ]]
+[[- /*
+Segredos do app: todos os itens da Nomad Variable nomad/jobs do namespace
+viram variaveis de ambiente (o pipeline grava ali os secrets APP_* do GitHub,
+DB_PASSWORD e SECRET_KEY). Com mysql_upstream, tambem as variaveis de conexao.
+Sem a variable (app sem segredos), o template fica vazio e o app sobe normal.
+*/ -]]
+[[ define "app_env" -]]
+      template {
+        data        = <<EOH
+{{ if nomadVarExists "nomad/jobs" -}}
+{{ with nomadVar "nomad/jobs" -}}
+{{ range .Tuples }}{{ .K }}={{ .V }}
+{{ end -}}
+[[- if var "mysql_upstream" . ]]
+DATABASE_URL=mysql://app:{{ .DB_PASSWORD }}@127.0.0.1:3306/app
 [[- end ]]
+{{ end -}}
+{{ end -}}
+[[- if var "mysql_upstream" . ]]
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=app
+DB_USER=app
+[[- end ]]
+EOH
+        destination = "secrets/app.env"
+        env         = true
+        change_mode = "restart"
       }
-[[- end ]]
 [[- end -]]

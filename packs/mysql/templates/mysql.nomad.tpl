@@ -88,29 +88,16 @@ job [[ template "job_name" . ]] {
         memory = [[ var "memory" . ]]
       }
 
-      identity {
-        name        = "vault_default"
-        aud         = ["vault.io"]
-        ttl         = "1h"
-        env         = true
-        file        = true
-        change_mode = "restart"
-      }
-
-      vault {
-        role = "student-[[ var "namespace" . ]]-role"
-      }
-
-      # Senhas no Vault (secret/students/<namespace>/app): db_root_password e
-      # db_password. Banco e usuario so sao criados no primeiro start (volume vazio).
+      # Senhas geradas pelo pipeline no primeiro deploy (Nomad Variable
+      # nomad/jobs). Banco e usuario "app" so sao criados com o volume vazio.
       template {
         data        = <<EOH
-{{ with secret "secret/data/students/[[ var "namespace" . ]]/app" -}}
-MYSQL_ROOT_PASSWORD={{ .Data.data.db_root_password }}
-MYSQL_PASSWORD={{ .Data.data.db_password }}
+{{ with nomadVar "nomad/jobs" -}}
+MYSQL_ROOT_PASSWORD={{ .DB_ROOT_PASSWORD }}
+MYSQL_PASSWORD={{ .DB_PASSWORD }}
 {{ end -}}
-MYSQL_DATABASE=[[ var "database" . ]]
-MYSQL_USER=[[ var "user" . ]]
+MYSQL_DATABASE=app
+MYSQL_USER=app
 EOH
         destination = "secrets/mysql.env"
         env         = true

@@ -1,0 +1,179 @@
+# Pipeline de deploy dos alunos (reusable workflow). O repositório do aluno só
+# chama este arquivo:
+#
+#   jobs:
+#     deploy:
+#       permissions: { contents: read, packages: write }
+#       uses: ss-cstads/nomad-packs/.github/workflows/deploy.yml@v2
+#       secrets: inherit
+#       with:
+#         port: 3000
+#
+# Secrets do aluno: NOMAD_TOKEN e STUDENT_NAMESPACE. Secrets APP_<NOME> viram a
+# variável de ambiente <NOME> no container.
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      port:
+        description: Porta do app público (ou do frontend)
+        type: number
+        default: 8080
+      health:
+        description: Rota que responde 200 quando o app está saudável
+        type: string
+        default: /
+      memory:
+        description: Memória do app (MB)
+        type: number
+        default: 256
+      frontend:
+        description: Pasta do frontend (com Dockerfile). Vazio = app na raiz do repositório
+        type: string
+        default: ""
+      backend:
+        description: Pasta do backend (com Dockerfile). Vazio = sem backend
+        type: string
+        default: ""
+      backend_port:
+        type: number
+        default: 8080
+      backend_health:
+        type: string
+        default: /health
+      backend_memory:
+        type: number
+        default: 512
+      database:
+        description: Cria um MySQL com dados persistentes
+        type: boolean
+        default: false
+
+env:
+  NOMAD_ADDR: https://nomad.projetos.sapucaia.ifsul.edu.br
+  NOMAD_VERSION: "2.0.7"
+  NOMAD_PACK_VERSION: "0.4.2"
+  # Packs da mesma branch deste workflow (alunos usam @v2). Nova major: nova
+  # branch v3 e atualizar aqui.
+  PACKS_REF: v2
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - name: app
+            context: ${{ inputs.frontend || '.' }}
+          - name: backend
+            context: ${{ inputs.backend }}
+    steps:
+      - name: Checkout
+        if: matrix.context != ''
+        uses: actions/checkout@v7
+
+      - name: Nome da imagem
+        if: matrix.context != ''
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.name }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Login no ghcr.io
+        if: matrix.context != ''
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push
+        if: matrix.context != ''
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ steps.image.outputs.name }}
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      NS: ${{ secrets.STUDENT_NAMESPACE }}
+    steps:
+      - name: Conferir secrets
+        run: |
+          [ -n "$NOMAD_TOKEN" ] || { echo "::error::Falta o secret NOMAD_TOKEN"; exit 1; }
+          [ -n "$NS" ] || { echo "::error::Falta o secret STUDENT_NAMESPACE"; exit 1; }
+
+      - name: Instalar Nomad e Nomad Pack
+        run: |
+          base=https://releases.hashicorp.com
+          curl -fsSL "$base/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip" -o nomad.zip
+          curl -fsSL "$base/nomad-pack/${NOMAD_PACK_VERSION}/nomad-pack_${NOMAD_PACK_VERSION}_linux_amd64.zip" -o pack.zip
+          unzip -qo nomad.zip && unzip -qo pack.zip && sudo mv nomad nomad-pack /usr/local/bin/
+
+      # Segredos do app na Nomad Variable nomad/jobs (lida por todos os jobs do
+      # namespace): APP_<NOME> do GitHub + SECRET_KEY e senhas do banco, geradas
+      # uma única vez (o MySQL grava as senhas ao inicializar o volume).
+      - name: Segredos do app
+        env:
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+          DATABASE: ${{ inputs.database }}
+        run: |
+          current=$(nomad var get -namespace "$NS" -out json nomad/jobs 2>/dev/null | jq -c '.Items // {}') || true
+          [ -n "$current" ] || current='{}'
+          gen() { openssl rand -hex "$1"; }
+          items=$(jq -c \
+            --argjson app "$(jq -c 'with_entries(select(.key | startswith("APP_")) | .key |= sub("^APP_"; ""))' <<<"$ALL_SECRETS")" \
+            --arg sk "$(gen 32)" --arg dbp "$(gen 16)" --arg dbr "$(gen 16)" --arg db "$DATABASE" '
+              . + $app
+              | .SECRET_KEY //= $sk
+              | if $db == "true" then (.DB_PASSWORD //= $dbp | .DB_ROOT_PASSWORD //= $dbr) else . end
+            ' <<<"$current")
+          for v in $(jq -r '.[]' <<<"$items"); do echo "::add-mask::$v"; done
+          if [ "$items" != "$current" ]; then
+            jq -n --argjson items "$items" '{Items: $items}' | nomad var put -namespace "$NS" -force -in json nomad/jobs - >/dev/null
+            echo "Segredos atualizados: $(jq -r 'keys | join(", ")' <<<"$items")"
+          else
+            echo "Segredos sem mudança"
+          fi
+
+      - name: Packs do cluster
+        run: nomad-pack registry add ifsul github.com/ss-cstads/nomad-packs --ref="$PACKS_REF"
+
+      - name: Deploy do banco
+        if: inputs.database
+        run: nomad-pack run mysql --registry=ifsul --ref="$PACKS_REF" --var namespace="$NS"
+
+      - name: Deploy do backend
+        if: inputs.backend != ''
+        run: |
+          nomad-pack run api --registry=ifsul --ref="$PACKS_REF" \
+            --var namespace="$NS" \
+            --var image="ghcr.io/${GITHUB_REPOSITORY,,}/backend:${{ github.sha }}" \
+            --var port="${{ inputs.backend_port }}" \
+            --var health_path="${{ inputs.backend_health }}" \
+            --var memory="${{ inputs.backend_memory }}" \
+            --var mysql_upstream="${{ inputs.database }}"
+
+      - name: Deploy do app
+        run: |
+          nomad-pack run web_app --registry=ifsul --ref="$PACKS_REF" \
+            --var namespace="$NS" \
+            --var image="ghcr.io/${GITHUB_REPOSITORY,,}/app:${{ github.sha }}" \
+            --var port="${{ inputs.port }}" \
+            --var health_path="${{ inputs.health }}" \
+            --var memory="${{ inputs.memory }}" \
+            --var backend_upstream="${{ inputs.backend != '' }}" \
+            --var mysql_upstream="${{ inputs.database && inputs.backend == '' }}"
+
+      - name: Endereço
+        run: |
+          echo "### https://${NS}.projetos.sapucaia.ifsul.edu.br" >> "$GITHUB_STEP_SUMMARY"
+          echo "App: https://${NS}.projetos.sapucaia.ifsul.edu.br"

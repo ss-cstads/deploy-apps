@@ -1,29 +1,27 @@
-# --- Injetadas pelo GitHub Actions ------------------------------------------
 variable "namespace" {
-  description = "Namespace do aluno (secret STUDENT_NAMESPACE). Define o servico <namespace>-app e a URL publica."
+  description = "Namespace do aluno."
   type        = string
 }
 
 variable "image" {
-  description = "Imagem Docker da aplicacao (ex.: ghcr.io/<usuario>/<repo>:<sha>)."
+  description = "Imagem Docker."
   type        = string
 }
 
-# --- Personalizaveis pelo aluno ----------------------------------------------
 variable "job_name" {
-  description = "Nome do job no Nomad (unico dentro do namespace)."
+  description = "Nome do job no namespace."
   type        = string
   default     = "web"
 }
 
 variable "port" {
-  description = "Porta em que a aplicacao escuta dentro do container (EXPOSE do Dockerfile)."
+  description = "Porta em que o app escuta no container."
   type        = number
   default     = 8080
 }
 
 variable "health_path" {
-  description = "Rota HTTP que responde 2xx quando a aplicacao esta saudavel."
+  description = "Rota HTTP que responde 2xx quando o app esta saudavel."
   type        = string
   default     = "/"
 }
@@ -35,49 +33,31 @@ variable "count" {
 }
 
 variable "cpu" {
-  description = "CPU reservada, em MHz."
+  description = "CPU reservada (MHz)."
   type        = number
   default     = 200
 }
 
 variable "memory" {
-  description = "Memoria reservada, em MB. O container e encerrado se passar disso."
+  description = "Memoria reservada (MB)."
   type        = number
   default     = 256
 }
 
 variable "healthy_deadline" {
-  description = "Tempo maximo para a nova versao ficar saudavel antes do rollback automatico."
+  description = "Prazo para a versao nova ficar saudavel antes do rollback."
   type        = string
   default     = "3m"
 }
 
-variable "env" {
-  description = "Variaveis de ambiente nao secretas (ex.: { NODE_ENV = \"production\" })."
-  type        = map(string)
-  default     = {}
-}
-
-variable "vault_secrets" {
-  description = "Chaves do Vault (secret/students/<namespace>/app) injetadas como env em MAIUSCULAS."
-  type        = list(string)
-  default     = []
-}
-
-variable "secret_env" {
-  description = "Env montada com segredos do Vault: { DATABASE_URL = \"mysql://app:{{db_password}}@127.0.0.1:3306/app\" }."
-  type        = map(string)
-  default     = {}
-}
-
-variable "backend_upstream" {
-  description = "Liga o acesso ao pack api (<namespace>-backend) via service mesh."
+variable "mysql_upstream" {
+  description = "Acesso ao MySQL (pack mysql) em 127.0.0.1:3306, com DB_* e DATABASE_URL."
   type        = bool
   default     = false
 }
 
-variable "backend_local_port" {
-  description = "Porta local (127.0.0.1) onde o backend fica acessivel quando backend_upstream = true."
-  type        = number
-  default     = 8080
+variable "backend_upstream" {
+  description = "Acesso a API (pack api) em 127.0.0.1:8080."
+  type        = bool
+  default     = false
 }

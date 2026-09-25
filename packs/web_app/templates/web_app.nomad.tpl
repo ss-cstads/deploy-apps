@@ -31,12 +31,13 @@ job [[ template "job_name" . ]] {
             }
 [[- if var "backend_upstream" . ]]
 
-            # <namespace>-backend (pack api) em 127.0.0.1:[[ var "backend_local_port" . ]]
+            # <namespace>-backend (pack api) em 127.0.0.1:8080
             upstreams {
               destination_name = "[[ var "namespace" . ]]-backend"
-              local_bind_port  = [[ var "backend_local_port" . ]]
+              local_bind_port  = 8080
             }
 [[- end ]]
+[[- template "mysql_upstream" . ]]
           }
         }
       }
@@ -64,8 +65,8 @@ job [[ template "job_name" . ]] {
         cpu    = [[ var "cpu" . ]]
         memory = [[ var "memory" . ]]
       }
-[[ template "env" . ]]
-[[ template "vault_secrets" . ]]
+
+[[ template "app_env" . ]]
     }
   }
 }

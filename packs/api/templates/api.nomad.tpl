@@ -29,14 +29,7 @@ job [[ template "job_name" . ]] {
             config {
               protocol = "http"
             }
-[[- if var "mysql_upstream" . ]]
-
-            # <namespace>-mysql (pack mysql) em 127.0.0.1:[[ var "mysql_local_port" . ]]
-            upstreams {
-              destination_name = "[[ var "namespace" . ]]-mysql"
-              local_bind_port  = [[ var "mysql_local_port" . ]]
-            }
-[[- end ]]
+[[- template "mysql_upstream" . ]]
           }
         }
       }
@@ -64,8 +57,8 @@ job [[ template "job_name" . ]] {
         cpu    = [[ var "cpu" . ]]
         memory = [[ var "memory" . ]]
       }
-[[ template "env" . ]]
-[[ template "vault_secrets" . ]]
+
+[[ template "app_env" . ]]
     }
   }
 }

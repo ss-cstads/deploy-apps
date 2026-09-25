@@ -1,42 +1,28 @@
-# --- Injetada pelo GitHub Actions -------------------------------------------
 variable "namespace" {
-  description = "Namespace do aluno (secret STUDENT_NAMESPACE). Define o servico e o volume <namespace>-mysql."
+  description = "Namespace do aluno (servico e volume <namespace>-mysql)."
   type        = string
 }
 
-# --- Personalizaveis pelo aluno ----------------------------------------------
 variable "job_name" {
-  description = "Nome do job no Nomad (unico dentro do namespace)."
+  description = "Nome do job no namespace."
   type        = string
   default     = "mysql"
 }
 
 variable "image" {
-  description = "Imagem do MySQL. 8.4 = versao LTS atual."
+  description = "Imagem do MySQL (8.4 = LTS)."
   type        = string
   default     = "mysql:8.4"
 }
 
-variable "database" {
-  description = "Banco criado no primeiro start (volume vazio)."
-  type        = string
-  default     = "app"
-}
-
-variable "user" {
-  description = "Usuario da aplicacao criado no primeiro start; a senha e db_password no Vault."
-  type        = string
-  default     = "app"
-}
-
 variable "cpu" {
-  description = "CPU reservada, em MHz."
+  description = "CPU reservada (MHz)."
   type        = number
   default     = 500
 }
 
 variable "memory" {
-  description = "Memoria reservada, em MB."
+  description = "Memoria reservada (MB)."
   type        = number
   default     = 512
 }
