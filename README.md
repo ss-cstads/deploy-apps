@@ -71,6 +71,8 @@ Copie o conteúdo de uma pasta para a raiz do seu repositório:
 ## Deu errado?
 
 - **Erro no build:** aba **Actions**, no passo que falhou.
+- **`permission_denied: write_package`:** sobrou uma imagem de um repositório apagado com
+  o mesmo nome. Apague-a em **github.com/<seu-usuário>?tab=packages**.
 - **App não abre:** entre em `https://nomad.projetos.sapucaia.ifsul.edu.br/ui` com o seu
   `NOMAD_TOKEN` e veja os logs em **Jobs**. Causa mais comum: `port` diferente da porta do app.
 - Se uma versão nova não funcionar, a anterior continua no ar.
