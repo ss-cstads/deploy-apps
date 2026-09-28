@@ -1,6 +1,7 @@
 # Publicar seu app no ar
 
-Coloque seu app em `https://<seu-namespace>.projetos.sapucaia.ifsul.edu.br` sem
+Solicite ao prof. Alex Orozco um namespace.
+Seu app será hospedado em `https://<seu-namespace>.projetos.sapucaia.ifsul.edu.br` sem
 configurar servidor. Serve para qualquer repositório seu, novo ou já existente.
 
 ## 1. Adicione este arquivo ao seu repositório
