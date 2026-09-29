@@ -1,5 +1,5 @@
 # ==============================================================================
-# Dockerfile — Frontend Angular + Nginx
+# Dockerfile — Frontend React (Vite) + Nginx
 #
 # Hardening aplicado:
 #   - Multi-stage build: imagem final contem apenas Nginx + arquivos estaticos
@@ -17,12 +17,12 @@ COPY package*.json ./
 RUN npm install --no-fund --no-audit
 
 COPY . .
-RUN npx ng build --configuration=production
+RUN npm run build
 
 # --- Runtime ---
 FROM nginx:alpine
 
-COPY --from=build /app/dist/task-frontend /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

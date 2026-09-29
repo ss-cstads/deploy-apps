@@ -84,10 +84,10 @@ Copie o conteúdo de uma pasta para a raiz do seu repositório:
 | [`exemplos/php`](exemplos/php) | mural de recados em PHP + MySQL, sem framework |
 | [`exemplos/go`](exemplos/go) | API JSON em Go, só com a biblioteca padrão |
 | [`exemplos/api-java-mobile`](exemplos/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
-| [`exemplos/fullstack-java`](exemplos/fullstack-java) | Angular + Spring Boot + MySQL |
-| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | Angular + Express + MySQL |
-| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | Angular + Express/Prisma + MySQL |
-| [`exemplos/fullstack-python`](exemplos/fullstack-python) | Angular + FastAPI + MySQL |
+| [`exemplos/fullstack-java`](exemplos/fullstack-java) | React + Spring Boot + MySQL |
+| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | React + Express + MySQL |
+| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | React + Express/Prisma + MySQL |
+| [`exemplos/fullstack-python`](exemplos/fullstack-python) | React + FastAPI + MySQL |
 
 ## Deu errado?
 
