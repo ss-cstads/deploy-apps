@@ -1,6 +1,7 @@
 package br.edu.ifsul.taskapi.config;
 
 import br.edu.ifsul.taskapi.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,6 +40,14 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
+            // sem token ou com token invalido/vencido: 401 com JSON, como os outros backends.
+            // (O padrao do Spring Security e 403, e o frontend nao saberia que precisa de
+            // um novo login.)
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Token invalido ou ausente\"}");
+            }))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
