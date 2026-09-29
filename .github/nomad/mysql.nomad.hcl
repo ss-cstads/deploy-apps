@@ -82,6 +82,9 @@ job "mysql" {
         args  = [
           "--character-set-server=utf8mb4",
           "--collation-server=utf8mb4_unicode_ci",
+          # Sem performance_schema: ~420 MB -> ~190 MB em repouso. Com ele, o
+          # MySQL toma OOM nos 512 MB ao importar dumps de poucos MB.
+          "--performance-schema=OFF",
         ]
       }
 
