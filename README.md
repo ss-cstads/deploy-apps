@@ -28,7 +28,12 @@ jobs:
       APP_ENV: ${{ secrets.APP_ENV }}
 ```
 
-**Não precisa de Dockerfile:** o pipeline reconhece o projeto pelos arquivos dele.
+**O Dockerfile é opcional.** O pipeline constrói o app de um de dois jeitos:
+
+- **sem `Dockerfile`** (o mais simples): ele reconhece o projeto pelos arquivos;
+- **com `Dockerfile`**: se existir um na pasta do app, é ele que vale.
+
+Sem `Dockerfile`, o repositório precisa ter:
 
 | Projeto | O que o repositório precisa ter |
 |---------|--------------------------------|
@@ -40,9 +45,11 @@ jobs:
 | Site estático | `index.html` na raiz |
 | .NET, Ruby | os arquivos normais do projeto |
 
-Se o repositório tiver um `Dockerfile`, ele é usado no lugar
-([modelos por linguagem](exemplos/dockerfiles)). Nesse caso, informe a porta do app
-com a opção `port` (veja [Opções](#opções): onde ela fica e como escrever).
+Com `Dockerfile` ([modelos por linguagem](exemplos/dockerfiles)), você controla a
+imagem inteira; use quando o app precisa de algo que a detecção automática não
+faz (um `nginx.conf` próprio, um pacote do sistema, uma versão específica).
+Informe a porta do app com a opção `port` (veja [Opções](#opções): onde ela fica
+e como escrever).
 
 ## 2. Cadastre o seu token
 
@@ -111,16 +118,20 @@ Copie o conteúdo de uma pasta para a raiz do seu repositório. Os exemplos
 certas: copie-o também, **no lugar** do arquivo do passo 1 (a pasta `.github`
 fica oculta em alguns gerenciadores de arquivos).
 
-| Pasta | O que é |
-|-------|---------|
-| [`exemplos/site`](exemplos/site) | página estática, só um `index.html` (o mais simples) |
-| [`exemplos/php`](exemplos/php) | mural de recados em PHP + MySQL, sem framework |
-| [`exemplos/go`](exemplos/go) | API JSON em Go, só com a biblioteca padrão |
-| [`exemplos/api-java-mobile`](exemplos/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
-| [`exemplos/fullstack-java`](exemplos/fullstack-java) | React + Spring Boot + MySQL |
-| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | React + Express + MySQL |
-| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | React + Express/Prisma + MySQL |
-| [`exemplos/fullstack-python`](exemplos/fullstack-python) | React + FastAPI + MySQL |
+| Pasta | O que é | Dockerfile |
+|-------|---------|------------|
+| [`exemplos/site`](exemplos/site) | página estática, só um `index.html` (o mais simples) | não |
+| [`exemplos/php`](exemplos/php) | mural de recados em PHP + MySQL, sem framework | não |
+| [`exemplos/go`](exemplos/go) | API JSON em Go, só com a biblioteca padrão | não |
+| [`exemplos/api-java-mobile`](exemplos/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` | não |
+| [`exemplos/fullstack-java`](exemplos/fullstack-java) | React + Spring Boot + MySQL | sim |
+| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | React + Express + MySQL | sim |
+| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | React + Express/Prisma + MySQL | sim |
+| [`exemplos/fullstack-python`](exemplos/fullstack-python) | React + FastAPI + MySQL | sim |
+
+Os `fullstack-*` usam `Dockerfile` porque o frontend precisa de um nginx com
+configuração própria (repassar `/api` para o backend), o que a detecção
+automática não faz. Um app de uma pasta só, como os quatro primeiros, não precisa.
 
 ## Deu errado?
 
