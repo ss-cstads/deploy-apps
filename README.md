@@ -42,12 +42,7 @@ jobs:
 
 Se o repositório tiver um `Dockerfile`, ele é usado no lugar
 ([modelos por linguagem](exemplos/dockerfiles)). Nesse caso, informe a porta do app
-no fim do arquivo acima:
-
-```yaml
-    with:
-      port: 3000
-```
+com a opção `port` (veja [Opções](#opções): onde ela fica e como escrever).
 
 ## 2. Cadastre o seu token
 
@@ -61,7 +56,21 @@ precisa ser **público**.
 
 ## Opções
 
-Dentro de `with:`:
+As opções vão no **fim do arquivo `.github/workflows/deploy.yml`** do seu
+repositório (o do passo 1), num bloco `with:` alinhado com `secrets:`. O fim do
+arquivo fica assim:
+
+```yaml
+    uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
+    secrets:
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      APP_ENV: ${{ secrets.APP_ENV }}
+    with:
+      port: 3000
+      database: true
+```
+
+Só existe um bloco `with:`; ponha nele todas as opções que for usar:
 
 | Opção | Padrão | Para que serve |
 |-------|--------|----------------|
@@ -72,7 +81,8 @@ Dentro de `with:`:
 
 ### App em subpastas (frontend + backend)
 
-Se o repositório tem o site numa pasta e a API em outra, diga quais são. Cada
+Se o repositório tem o site numa pasta e a API em outra, diga quais são no
+bloco `with:` do seu `.github/workflows/deploy.yml` (o mesmo das opções acima). Cada
 pasta é construída como um app à parte (com ou sem `Dockerfile`), e o endereço
 público é o do frontend:
 
