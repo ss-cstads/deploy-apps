@@ -271,3 +271,27 @@ jobs:
         run: |
           echo "### https://${NS}.projetos.sapucaia.ifsul.edu.br" >> "$GITHUB_STEP_SUMMARY"
           echo "App: https://${NS}.projetos.sapucaia.ifsul.edu.br"
+
+      # O aluno não tem acesso à UI do Nomad: o estado e os logs de cada parte do
+      # app saem aqui, com o deploy dando certo ou não. Para ver os logs de agora
+      # sem mudar nada: Actions > Deploy > Run workflow.
+      - name: Logs do app
+        if: always() && env.NS != ''
+        env:
+          JOBS: web ${{ inputs.backend != '' && 'api' || '' }} ${{ inputs.database && 'mysql' || '' }}
+        run: |
+          api() { curl -sS -m 20 -H "X-Nomad-Token: $NOMAD_TOKEN" "$NOMAD_ADDR$1"; }
+          for job in $JOBS; do
+            alloc=$(api "/v1/job/$job/allocations?namespace=$NS" | jq -c 'if type == "array" then (sort_by(.CreateTime) | last // empty) else empty end' 2>/dev/null) || true
+            [ -n "$alloc" ] || { echo "$job: ainda não foi criado no cluster"; continue; }
+            id=$(jq -r .ID <<<"$alloc")
+            echo "::group::$job: $(jq -r .ClientStatus <<<"$alloc")"
+            for task in $(jq -r '.TaskStates // {} | keys[] | select(startswith("connect-proxy") | not)' <<<"$alloc"); do
+              jq -r --arg t "$task" '.TaskStates[$t] | "[\($t)] estado: \(.State)\(if .Failed then " (FALHOU)" else "" end), reinícios: \(.Restarts)", (.Events[-5:][] | "    \(.DisplayMessage)")' <<<"$alloc"
+              for tipo in stdout stderr; do
+                saida=$(api "/v1/client/fs/logs/$id?namespace=$NS&task=$task&type=$tipo&plain=true&origin=end&offset=12000" 2>/dev/null | tail -n 60) || true
+                [ -z "$saida" ] || { echo "--- [$task] $tipo (últimas linhas)"; echo "$saida"; }
+              done
+            done
+            echo "::endgroup::"
+          done

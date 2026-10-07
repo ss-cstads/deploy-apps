@@ -217,12 +217,24 @@ base, os pacotes e o comando de início.
 
 ## Deu errado?
 
-- **Erro no build:** aba **Actions**, no passo que falhou.
+Tudo se vê na aba **Actions** do seu repositório: clique na execução e depois no
+passo que ficou vermelho.
+
+- **Erro no build** (passos "Build..."): o log mostra o erro de compilação ou de
+  instalação de dependências, como apareceria na sua máquina.
 - **`Não encontrei um app na pasta`:** o pipeline procura o app na raiz do repositório.
   Se ele está em pastas (`frontend/`, `backend/`), veja
   [App em subpastas](#app-em-subpastas-frontend--backend).
 - **`permission_denied: write_package`:** sobrou uma imagem de um repositório apagado com
   o mesmo nome. Apague-a em **github.com/<seu-usuário>?tab=packages**.
-- **App não abre:** entre em `https://nomad.projetos.sapucaia.ifsul.edu.br/ui` com o seu
-  `NOMAD_TOKEN` e veja os logs em **Jobs**. Causa mais comum: `port` diferente da porta do app.
+- **O deploy falhou ou o app não abre:** abra o passo **Logs do app**, o último da
+  execução. Ele mostra, para cada parte (`web`, `api`, `mysql`), o estado no
+  cluster e as últimas linhas que o app escreveu. As causas mais comuns:
+  - `port` diferente da porta em que o app escuta;
+  - a rota de `health` não responde 200;
+  - falta de memória (o estado mostra `OOM Killed`): aumente `memory`;
+  - o app sai logo ao iniciar: o erro está nas últimas linhas do log.
+- **Ver os logs de agora, sem mudar nada:** aba **Actions** → **Deploy** →
+  **Run workflow**. A execução refaz o deploy da mesma versão e termina com os
+  logs atuais.
 - Se uma versão nova não funcionar, a anterior continua no ar.
