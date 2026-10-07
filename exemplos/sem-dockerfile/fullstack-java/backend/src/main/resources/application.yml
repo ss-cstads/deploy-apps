@@ -18,7 +18,7 @@ server:
   port: 8080
 
 jwt:
-  secret: ${SECRET_KEY:default-secret-key-change-in-production-must-be-512-bits-long-for-hs512-ok}
+  secret: ${SECRET_KEY:chave-usada-so-na-sua-maquina-no-cluster-vale-a-variavel-SECRET_KEY}   # no cluster vale a SECRET_KEY criada pelo pipeline; o texto depois do ":" só vale na sua máquina
   expiration: 86400000   # 24 horas em milliseconds
 
 management:

@@ -9,7 +9,7 @@ app.use(express.json());
 const prisma = new PrismaClient();
 
 const PORT = Number(process.env.PORT) || 8080;
-const JWT_SECRET = process.env.SECRET_KEY || 'dev-secret-change-me';
+const JWT_SECRET = process.env.SECRET_KEY || 'chave-so-da-sua-maquina';   // no cluster vale a SECRET_KEY criada pelo pipeline
 
 // --- Tipos ---
 interface JwtPayload { id: number; username: string; }

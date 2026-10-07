@@ -13,7 +13,7 @@ const DB_PORT = process.env.DB_PORT || 3306;
 const DB_NAME = process.env.DB_NAME || 'taskdb';
 const DB_USER = process.env.DB_USER || 'taskapi';
 const DB_PASS = process.env.DB_PASSWORD || 'password';
-const JWT_SECRET = process.env.SECRET_KEY || 'dev-secret-change-me';
+const JWT_SECRET = process.env.SECRET_KEY || 'chave-so-da-sua-maquina';   // no cluster vale a SECRET_KEY criada pelo pipeline
 
 // --- Banco de dados (Sequelize + MySQL) ---
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {

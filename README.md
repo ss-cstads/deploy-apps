@@ -151,7 +151,10 @@ chave aleatória para o seu namespace e a entrega ao app na variável de ambient
 caem a cada push.
 
 Basta o app ler essa variável onde configuraria o segredo do JWT ou da sessão.
-Veja nos exemplos:
+**Não é preciso trocar nada antes de publicar:** nos exemplos, o texto que
+aparece ao lado de `SECRET_KEY` no código é só um valor de reserva, usado quando
+você roda o app na sua máquina (onde a variável não existe). No cluster a
+variável sempre existe, e é a chave sorteada que vale. Veja nos exemplos:
 [JavaScript](exemplos/sem-dockerfile/fullstack-javascript/backend/server.js#L16),
 [TypeScript](exemplos/sem-dockerfile/fullstack-typescript/backend/src/server.ts#L12),
 [Python](exemplos/sem-dockerfile/fullstack-python/backend/main.py#L19) e
