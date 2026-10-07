@@ -37,15 +37,17 @@ Sem `Dockerfile`, o repositório precisa ter:
 
 | Projeto | O que o repositório precisa ter |
 |---------|--------------------------------|
-| Node.js | `package.json` com o script `start` ([exemplo](exemplos/fullstack-javascript/backend/package.json)); o app escuta em `process.env.PORT`. TypeScript: o script `build` compila antes ([exemplo](exemplos/fullstack-typescript/backend/package.json)) |
-| Python | `requirements.txt` ([exemplo](exemplos/fullstack-python/backend/requirements.txt)) e um arquivo `Procfile` com o comando que sobe o app, como `web: gunicorn app:app --bind 0.0.0.0:$PORT` ([exemplo](exemplos/fullstack-python/backend/Procfile)) |
-| Java | `pom.xml` ([exemplo](exemplos/fullstack-java/backend/pom.xml)) ou `build.gradle`, e **memória no `with:`**: `memory: 768`, ou `memory: 512` com um `project.toml` como [este](exemplos/fullstack-java/backend/project.toml) (o padrão de 256 MB não basta para a JVM). Usa Java 21, a menos que o `project.toml` peça outra versão ([exemplo](exemplos/api-java-mobile/project.toml)) |
-| PHP | `index.php` na raiz ([exemplo](exemplos/php/index.php)); extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/php/.php.ini.d)) |
-| Go | `go.mod` (até Go 1.26) ([exemplo](exemplos/go/go.mod)) |
-| Site estático | `index.html` na raiz ([exemplo](exemplos/site/index.html)) |
-| .NET, Ruby | os arquivos normais do projeto |
+| Node.js | `package.json` com o script `start` ([exemplo](exemplos/sem-dockerfile/fullstack-javascript/backend/package.json)); o app escuta em `process.env.PORT`. TypeScript: o script `build` compila antes ([exemplo](exemplos/sem-dockerfile/fullstack-typescript/backend/package.json)) |
+| Python | `requirements.txt` ([exemplo](exemplos/sem-dockerfile/fullstack-python/backend/requirements.txt)) e um arquivo `Procfile` com o comando que sobe o app, como `web: gunicorn app:app --bind 0.0.0.0:$PORT` ([exemplo](exemplos/sem-dockerfile/fullstack-python/backend/Procfile)) |
+| Java | `pom.xml` ([exemplo](exemplos/sem-dockerfile/fullstack-java/backend/pom.xml)) ou `build.gradle`, e **memória no `with:`**: `memory: 768`, ou `memory: 512` com um `project.toml` como [este](exemplos/sem-dockerfile/fullstack-java/backend/project.toml) (o padrão de 256 MB não basta para a JVM). Usa Java 21, a menos que o `project.toml` peça outra versão ([exemplo](exemplos/sem-dockerfile/api-java-mobile/project.toml)) |
+| PHP | `index.php` na raiz ([exemplo](exemplos/sem-dockerfile/php/index.php)); extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/sem-dockerfile/php/.php.ini.d)) |
+| Go | `go.mod` (até Go 1.26) ([exemplo](exemplos/sem-dockerfile/go/go.mod)) |
+| Site estático | `index.html` na raiz ([exemplo](exemplos/sem-dockerfile/site/index.html)) |
+| Site com build (React, Vite) | `package.json` com o script `build`, um `project.toml` que manda rodá-lo e um `nginx.conf` que serve a pasta gerada ([exemplo](exemplos/sem-dockerfile/fullstack-javascript/frontend)) |
+| .NET | o arquivo `.csproj` ([exemplo](exemplos/sem-dockerfile/dotnet/exemplo.csproj)) |
+| Ruby | `Gemfile` com `puma`, `Gemfile.lock` e `config.ru` ([exemplo](exemplos/sem-dockerfile/ruby)) |
 
-Com `Dockerfile` ([modelos por linguagem](exemplos/dockerfiles)), você controla a
+Com `Dockerfile` ([modelos por linguagem](exemplos/com-dockerfile/modelos)), você controla a
 imagem inteira; use quando o app precisa de algo que a detecção automática não
 faz (um `nginx.conf` próprio, um pacote do sistema, uma versão específica).
 Informe a porta do app com a opção `port` (veja [Opções](#opções): onde ela fica
@@ -105,6 +107,8 @@ público é o do frontend:
 
 O frontend alcança a API em `http://127.0.0.1:<backend_port>` (nos exemplos
 `fullstack-*`, o `nginx.conf` do frontend repassa `/api` para `http://127.0.0.1:8080`).
+Sem `Dockerfile`, as duas partes recebem a porta pela variável `PORT`: dê ao
+frontend uma porta diferente da do backend (por exemplo `port: 3000`).
 `backend_memory` (padrão `512`) ajusta a memória da API.
 
 **Senhas e chaves:** crie um secret `APP_ENV` com uma linha `NOME=valor` por
@@ -113,25 +117,59 @@ A variável `SECRET_KEY` já vem pronta (para assinar tokens e sessões).
 
 ## Exemplos prontos
 
-Copie o conteúdo de uma pasta para a raiz do seu repositório. Os exemplos
-`fullstack-*` trazem o próprio `.github/workflows/deploy.yml`, já com as opções
-certas: copie-o também, **no lugar** do arquivo do passo 1 (a pasta `.github`
-fica oculta em alguns gerenciadores de arquivos).
+Copie o conteúdo de uma pasta para a raiz do seu repositório, **inclusive o
+`.github/workflows/deploy.yml` dela**, no lugar do arquivo do passo 1 (a pasta
+`.github` fica oculta em alguns gerenciadores de arquivos).
 
-| Pasta | O que é | Dockerfile |
-|-------|---------|------------|
-| [`exemplos/site`](exemplos/site) | página estática, só um `index.html` (o mais simples) | não |
-| [`exemplos/php`](exemplos/php) | mural de recados em PHP + MySQL, sem framework | não |
-| [`exemplos/go`](exemplos/go) | API JSON em Go, só com a biblioteca padrão | não |
-| [`exemplos/api-java-mobile`](exemplos/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` | não |
-| [`exemplos/fullstack-java`](exemplos/fullstack-java) | React + Spring Boot + MySQL | só no frontend |
-| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | React + Express + MySQL | só no frontend |
-| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | React + Express/Prisma + MySQL | só no frontend |
-| [`exemplos/fullstack-python`](exemplos/fullstack-python) | React + FastAPI + MySQL | só no frontend |
+Os mesmos apps aparecem em até três versões, conforme quem monta a imagem:
 
-Nos `fullstack-*`, só o frontend tem `Dockerfile`: ele precisa de um nginx com
-configuração própria (repassar `/api` para o backend), o que a detecção
-automática não faz. Os backends e os apps de uma pasta só não precisam.
+### Sem Dockerfile ([`exemplos/sem-dockerfile`](exemplos/sem-dockerfile))
+
+O mais simples: o pipeline reconhece o projeto pelos arquivos e monta a imagem.
+
+| Pasta | O que é |
+|-------|---------|
+| [`site`](exemplos/sem-dockerfile/site) | página estática, só um `index.html` |
+| [`php`](exemplos/sem-dockerfile/php) | mural de recados em PHP + MySQL, sem framework |
+| [`go`](exemplos/sem-dockerfile/go) | API JSON em Go, só com a biblioteca padrão |
+| [`ruby`](exemplos/sem-dockerfile/ruby) | API JSON em Ruby (Sinatra) |
+| [`dotnet`](exemplos/sem-dockerfile/dotnet) | API JSON em C# (ASP.NET Core) |
+| [`api-java-mobile`](exemplos/sem-dockerfile/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
+| [`fullstack-java`](exemplos/sem-dockerfile/fullstack-java) | React + Spring Boot + MySQL |
+| [`fullstack-javascript`](exemplos/sem-dockerfile/fullstack-javascript) | React + Express + MySQL |
+| [`fullstack-typescript`](exemplos/sem-dockerfile/fullstack-typescript) | React + Express/Prisma + MySQL |
+| [`fullstack-python`](exemplos/sem-dockerfile/fullstack-python) | React + FastAPI + MySQL |
+
+### Dockerfile parcial ([`exemplos/dockerfile-parcial`](exemplos/dockerfile-parcial))
+
+Só para apps com frontend e backend em pastas separadas: o frontend tem
+`Dockerfile` (você controla o nginx) e o backend é reconhecido pelos arquivos.
+
+| Pasta | O que é |
+|-------|---------|
+| [`fullstack-java`](exemplos/dockerfile-parcial/fullstack-java) | React + Spring Boot + MySQL |
+| [`fullstack-javascript`](exemplos/dockerfile-parcial/fullstack-javascript) | React + Express + MySQL |
+| [`fullstack-typescript`](exemplos/dockerfile-parcial/fullstack-typescript) | React + Express/Prisma + MySQL |
+| [`fullstack-python`](exemplos/dockerfile-parcial/fullstack-python) | React + FastAPI + MySQL |
+
+### Dockerfile completo ([`exemplos/com-dockerfile`](exemplos/com-dockerfile))
+
+Todos os exemplos, cada parte com o seu `Dockerfile`: você escolhe a imagem
+base, os pacotes e o comando de início.
+
+| Pasta | O que é |
+|-------|---------|
+| [`site`](exemplos/com-dockerfile/site) | página estática, só um `index.html` |
+| [`php`](exemplos/com-dockerfile/php) | mural de recados em PHP + MySQL, sem framework |
+| [`go`](exemplos/com-dockerfile/go) | API JSON em Go, só com a biblioteca padrão |
+| [`ruby`](exemplos/com-dockerfile/ruby) | API JSON em Ruby (Sinatra) |
+| [`dotnet`](exemplos/com-dockerfile/dotnet) | API JSON em C# (ASP.NET Core) |
+| [`api-java-mobile`](exemplos/com-dockerfile/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
+| [`fullstack-java`](exemplos/com-dockerfile/fullstack-java) | React + Spring Boot + MySQL |
+| [`fullstack-javascript`](exemplos/com-dockerfile/fullstack-javascript) | React + Express + MySQL |
+| [`fullstack-typescript`](exemplos/com-dockerfile/fullstack-typescript) | React + Express/Prisma + MySQL |
+| [`fullstack-python`](exemplos/com-dockerfile/fullstack-python) | React + FastAPI + MySQL |
+| [`modelos`](exemplos/com-dockerfile/modelos) | modelos de `Dockerfile` para Java, Node.js e Python, para adaptar ao seu app |
 
 ## Deu errado?
 

@@ -1,0 +1,8 @@
+# Sem Dockerfile: o pipeline roda "npm run build" e serve a pasta dist com o
+# nginx, usando o nginx.conf desta pasta (que repassa /api para o backend).
+[_]
+schema-version = "0.2"
+
+[[io.buildpacks.build.env]]
+name = "BP_NODE_RUN_SCRIPTS"
+value = "build"

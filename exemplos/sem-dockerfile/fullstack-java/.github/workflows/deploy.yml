@@ -1,0 +1,24 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      packages: write
+    uses: ss-cstads/deploy-apps/.github/workflows/deploy.yml@v2
+    secrets:
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+      APP_ENV: ${{ secrets.APP_ENV }}
+    with:
+      frontend: frontend
+      port: 3000   # porta do frontend (a 8080 é do backend)
+      health: /health
+      backend: backend
+      backend_health: /actuator/health
+      backend_memory: 512   # Java precisa de 512 MB (com o backend/project.toml); sem ele, 768
+      database: true
