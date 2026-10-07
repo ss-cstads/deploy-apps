@@ -106,6 +106,30 @@ jobs:
           if [ -f "$CTX/Dockerfile" ]; then
             echo "mode=dockerfile" >> "$GITHUB_OUTPUT"; echo "Build pelo Dockerfile"; exit 0
           fi
+          # Nada reconhecível na pasta: para aqui com uma explicação, em vez do
+          # "No buildpack groups passed detection" depois de 300 linhas de log
+          achou=false
+          for g in package.json pom.xml 'build.gradle*' requirements.txt pyproject.toml Pipfile go.mod \
+                   composer.json Gemfile Procfile index.html '*.php' '*.py' '*.js' '*.go' '*.rb' \
+                   '*.csproj' '*.fsproj' '*.vbproj' '*.sln'; do
+            compgen -G "$CTX/$g" >/dev/null && achou=true
+          done
+          if [ "$achou" = false ]; then
+            echo "::error::Não encontrei um app na pasta '$CTX' do repositório (nem Dockerfile, nem package.json, pom.xml, requirements.txt, index.html...)."
+            sub=""
+            for d in */; do
+              d=${d%/}
+              for f in Dockerfile package.json pom.xml build.gradle requirements.txt go.mod composer.json index.html index.php; do
+                [ -e "$d/$f" ] && { sub="$sub $d"; break; }
+              done
+            done
+            if [ "$CTX" = . ] && [ -n "$sub" ]; then
+              echo "::error::O app parece estar em subpastas:$sub. Diga quais são no fim do seu .github/workflows/deploy.yml (with: frontend / backend). Veja https://github.com/$CENTRAL_REPO#app-em-subpastas-frontend--backend"
+            else
+              echo "::error::Confira o que o repositório precisa ter: https://github.com/$CENTRAL_REPO#publicar-seu-app-no-ar"
+            fi
+            exit 1
+          fi
           echo "mode=buildpacks" >> "$GITHUB_OUTPUT"
           lang=false
           for f in package.json pom.xml build.gradle build.gradle.kts requirements.txt \

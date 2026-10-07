@@ -70,13 +70,36 @@ Dentro de `with:`:
 | `memory` | `256` | memória em MB |
 | `database` | `false` | `true` cria um MySQL; o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
 
+### App em subpastas (frontend + backend)
+
+Se o repositório tem o site numa pasta e a API em outra, diga quais são. Cada
+pasta é construída como um app à parte (com ou sem `Dockerfile`), e o endereço
+público é o do frontend:
+
+```yaml
+    with:
+      frontend: frontend        # pasta do site
+      port: 80                  # porta do frontend
+      backend: backend          # pasta da API
+      backend_port: 8080
+      backend_health: /health   # rota da API que responde 200
+      database: true            # se a API usa MySQL
+```
+
+O frontend alcança a API em `http://127.0.0.1:<backend_port>` (nos exemplos
+`fullstack-*`, o `nginx.conf` do frontend repassa `/api` para `http://127.0.0.1:8080`).
+`backend_memory` (padrão `512`) ajusta a memória da API.
+
 **Senhas e chaves:** crie um secret `APP_ENV` com uma linha `NOME=valor` por
 variável (como um arquivo `.env`); o app recebe cada uma como variável de ambiente.
 A variável `SECRET_KEY` já vem pronta (para assinar tokens e sessões).
 
 ## Exemplos prontos
 
-Copie o conteúdo de uma pasta para a raiz do seu repositório:
+Copie o conteúdo de uma pasta para a raiz do seu repositório. Os exemplos
+`fullstack-*` trazem o próprio `.github/workflows/deploy.yml`, já com as opções
+certas: copie-o também, **no lugar** do arquivo do passo 1 (a pasta `.github`
+fica oculta em alguns gerenciadores de arquivos).
 
 | Pasta | O que é |
 |-------|---------|
@@ -92,6 +115,9 @@ Copie o conteúdo de uma pasta para a raiz do seu repositório:
 ## Deu errado?
 
 - **Erro no build:** aba **Actions**, no passo que falhou.
+- **`Não encontrei um app na pasta`:** o pipeline procura o app na raiz do repositório.
+  Se ele está em pastas (`frontend/`, `backend/`), veja
+  [App em subpastas](#app-em-subpastas-frontend--backend).
 - **`permission_denied: write_package`:** sobrou uma imagem de um repositório apagado com
   o mesmo nome. Apague-a em **github.com/<seu-usuário>?tab=packages**.
 - **App não abre:** entre em `https://nomad.projetos.sapucaia.ifsul.edu.br/ui` com o seu
