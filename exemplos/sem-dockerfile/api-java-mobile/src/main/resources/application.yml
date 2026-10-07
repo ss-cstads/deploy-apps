@@ -1,4 +1,6 @@
 # O cluster entrega a conexão com o banco (DB_*) e a porta (PORT).
+# Não troque nada para publicar: o texto depois de cada ":" é só a reserva para
+# rodar na sua máquina.
 spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:app}?allowPublicKeyRetrieval=true&useSSL=false

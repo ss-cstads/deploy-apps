@@ -154,11 +154,13 @@ Basta o app ler essa variável onde configuraria o segredo do JWT ou da sessão.
 **Não é preciso trocar nada antes de publicar:** nos exemplos, o texto que
 aparece ao lado de `SECRET_KEY` no código é só um valor de reserva, usado quando
 você roda o app na sua máquina (onde a variável não existe). No cluster a
-variável sempre existe, e é a chave sorteada que vale. Veja nos exemplos:
-[JavaScript](exemplos/sem-dockerfile/fullstack-javascript/backend/server.js#L16),
+variável sempre existe, e é a chave sorteada que vale. O mesmo vale para as
+variáveis do banco (`DB_HOST`, `DB_PASSWORD`...) quando há `database: true`: a
+senha é sorteada pelo pipeline e chega pronta. Veja nos exemplos:
+[JavaScript](exemplos/sem-dockerfile/fullstack-javascript/backend/server.js#L18),
 [TypeScript](exemplos/sem-dockerfile/fullstack-typescript/backend/src/server.ts#L12),
-[Python](exemplos/sem-dockerfile/fullstack-python/backend/main.py#L19) e
-[Java](exemplos/sem-dockerfile/fullstack-java/backend/src/main/resources/application.yml#L21).
+[Python](exemplos/sem-dockerfile/fullstack-python/backend/main.py#L21) e
+[Java](exemplos/sem-dockerfile/fullstack-java/backend/src/main/resources/application.yml#L24).
 Se o app não tem login, ignore-a. Para usar uma chave sua, ponha uma linha
 `SECRET_KEY=...` no `APP_ENV`.
 

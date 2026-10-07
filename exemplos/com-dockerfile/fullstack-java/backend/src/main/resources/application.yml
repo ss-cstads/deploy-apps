@@ -1,10 +1,13 @@
 spring:
   application:
     name: task-api
+  # Banco: no cluster (database: true no deploy.yml) as variáveis DB_* já vêm
+  # prontas, com a senha sorteada pelo pipeline: não troque nada para publicar.
+  # O texto depois de cada ":" é só a reserva para rodar na sua máquina.
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:app}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:app}
-    password: ${DB_PASSWORD:changeme}
+    password: ${DB_PASSWORD:senha-do-mysql-da-sua-maquina}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

@@ -8,11 +8,13 @@ app.use(express.json());
 
 // --- Configuracao via variaveis de ambiente (injetadas pelo Vault) ---
 const PORT = process.env.PORT || 8080;
+// Banco: no cluster (database: true no deploy.yml) as variáveis DB_* já vêm prontas,
+// com a senha sorteada pelo pipeline. Os valores depois de || só valem na sua máquina.
 const DB_HOST = process.env.DB_HOST || '127.0.0.1';
 const DB_PORT = process.env.DB_PORT || 3306;
 const DB_NAME = process.env.DB_NAME || 'taskdb';
 const DB_USER = process.env.DB_USER || 'taskapi';
-const DB_PASS = process.env.DB_PASSWORD || 'password';
+const DB_PASS = process.env.DB_PASSWORD || 'senha-do-mysql-da-sua-maquina';
 const JWT_SECRET = process.env.SECRET_KEY || 'chave-so-da-sua-maquina';   // no cluster vale a SECRET_KEY criada pelo pipeline
 
 // --- Banco de dados (Sequelize + MySQL) ---

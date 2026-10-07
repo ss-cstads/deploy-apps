@@ -11,11 +11,13 @@ import bcrypt
 from jose import jwt, JWTError
 
 # --- Configuracao ---
+# Banco: no cluster (database: true no deploy.yml) as variáveis DB_* já vêm prontas,
+# com a senha sorteada pelo pipeline. O segundo valor de cada linha só vale na sua máquina.
 DB_HOST = os.environ.get("DB_HOST", "127.0.0.1")
 DB_PORT = os.environ.get("DB_PORT", "3306")
 DB_NAME = os.environ.get("DB_NAME", "taskdb")
 DB_USER = os.environ.get("DB_USER", "taskapi")
-DB_PASS = os.environ.get("DB_PASSWORD", "password")
+DB_PASS = os.environ.get("DB_PASSWORD", "senha-do-mysql-da-sua-maquina")
 JWT_SECRET = os.environ.get("SECRET_KEY", "chave-so-da-sua-maquina")   # no cluster vale a SECRET_KEY criada pelo pipeline
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_HOURS = 24
