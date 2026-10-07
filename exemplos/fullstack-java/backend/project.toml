@@ -1,0 +1,9 @@
+# Sem Dockerfile, a imagem reserva memória para 250 threads (250 MB só de pilha)
+# antes de iniciar a JVM, e o app não sobe com 512 MB. Com 50 threads ele cabe.
+# Se o app crescer e a JVM reclamar de memória: backend_memory: 768 no deploy.yml.
+[_]
+schema-version = "0.2"
+
+[[io.buildpacks.build.env]]
+name = "BPE_OVERRIDE_BPL_JVM_THREAD_COUNT"
+value = "50"

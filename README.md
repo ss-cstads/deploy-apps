@@ -39,7 +39,7 @@ Sem `Dockerfile`, o repositório precisa ter:
 |---------|--------------------------------|
 | Node.js | `package.json` com o script `start`; o app escuta em `process.env.PORT` |
 | Python | `requirements.txt` e um arquivo `Procfile`, por exemplo: `web: gunicorn app:app --bind 0.0.0.0:$PORT` |
-| Java | `pom.xml` ou `build.gradle`; usa Java 21, a menos que um `project.toml` peça outra versão ([exemplo](exemplos/api-java-mobile/project.toml)) |
+| Java | `pom.xml` ou `build.gradle`, e **memória no `with:`**: `memory: 768`, ou `memory: 512` com um `project.toml` como [este](exemplos/fullstack-java/backend/project.toml) (o padrão de 256 MB não basta para a JVM). Usa Java 21, a menos que o `project.toml` peça outra versão ([exemplo](exemplos/api-java-mobile/project.toml)) |
 | PHP | `index.php` na raiz; extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/php)) |
 | Go | `go.mod` (até Go 1.26) |
 | Site estático | `index.html` na raiz |
@@ -83,7 +83,7 @@ Só existe um bloco `with:`; ponha nele todas as opções que for usar:
 |-------|--------|----------------|
 | `port` | `8080` | porta do app (sem Dockerfile, o app recebe a variável `PORT` com esse valor) |
 | `health` | `/` | rota que responde 200 quando o app está funcionando |
-| `memory` | `256` | memória em MB |
+| `memory` | `256` | memória em MB (Java: no mínimo `512`, veja a tabela do passo 1) |
 | `database` | `false` | `true` cria um MySQL; o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
 
 ### App em subpastas (frontend + backend)
@@ -124,14 +124,14 @@ fica oculta em alguns gerenciadores de arquivos).
 | [`exemplos/php`](exemplos/php) | mural de recados em PHP + MySQL, sem framework | não |
 | [`exemplos/go`](exemplos/go) | API JSON em Go, só com a biblioteca padrão | não |
 | [`exemplos/api-java-mobile`](exemplos/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` | não |
-| [`exemplos/fullstack-java`](exemplos/fullstack-java) | React + Spring Boot + MySQL | sim |
-| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | React + Express + MySQL | sim |
-| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | React + Express/Prisma + MySQL | sim |
-| [`exemplos/fullstack-python`](exemplos/fullstack-python) | React + FastAPI + MySQL | sim |
+| [`exemplos/fullstack-java`](exemplos/fullstack-java) | React + Spring Boot + MySQL | só no frontend |
+| [`exemplos/fullstack-javascript`](exemplos/fullstack-javascript) | React + Express + MySQL | só no frontend |
+| [`exemplos/fullstack-typescript`](exemplos/fullstack-typescript) | React + Express/Prisma + MySQL | só no frontend |
+| [`exemplos/fullstack-python`](exemplos/fullstack-python) | React + FastAPI + MySQL | só no frontend |
 
-Os `fullstack-*` usam `Dockerfile` porque o frontend precisa de um nginx com
+Nos `fullstack-*`, só o frontend tem `Dockerfile`: ele precisa de um nginx com
 configuração própria (repassar `/api` para o backend), o que a detecção
-automática não faz. Um app de uma pasta só, como os quatro primeiros, não precisa.
+automática não faz. Os backends e os apps de uma pasta só não precisam.
 
 ## Deu errado?
 

@@ -4,7 +4,7 @@
   "description": "API REST de tarefas com Express + TypeScript + Prisma",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "prisma db push --skip-generate && node dist/server.js",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {

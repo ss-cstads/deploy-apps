@@ -6,8 +6,8 @@ e faça push.
 
 ```
 .github/workflows/deploy.yml   pipeline (frontend + backend + banco)
-frontend/                      React (Vite) servido pelo nginx (nginx.conf: /api -> backend)
-backend/                       API REST
+frontend/                      React (Vite) servido pelo nginx, com Dockerfile (nginx.conf: /api -> backend)
+backend/                       API REST, sem Dockerfile (package.json: build compila, start cria as tabelas e sobe)
 ```
 
 O backend recebe do cluster `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`,
