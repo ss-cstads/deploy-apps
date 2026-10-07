@@ -111,9 +111,53 @@ Sem `Dockerfile`, as duas partes recebem a porta pela variável `PORT`: dê ao
 frontend uma porta diferente da do backend (por exemplo `port: 3000`).
 `backend_memory` (padrão `512`) ajusta a memória da API.
 
-**Senhas e chaves:** crie um secret `APP_ENV` com uma linha `NOME=valor` por
-variável (como um arquivo `.env`); o app recebe cada uma como variável de ambiente.
-A variável `SECRET_KEY` já vem pronta (para assinar tokens e sessões).
+## Variáveis, senhas e chaves do app
+
+Se o app precisa de valores que não podem ficar no código (senha de e-mail, chave
+de uma API, token de um serviço), **não os escreva no repositório**: ele é
+público, e qualquer pessoa leria. Em vez de um arquivo `.env` no repositório,
+guarde o conteúdo dele num *secret* do GitHub:
+
+1. No repositório: **Settings → Secrets and variables → Actions → New repository
+   secret** (o mesmo lugar onde você cadastrou o `NOMAD_TOKEN`).
+2. Em **Name**, escreva `APP_ENV`.
+3. Em **Secret**, escreva uma variável por linha, no formato `NOME=valor`, como
+   num arquivo `.env`:
+
+   ```
+   MAIL_PASSWORD=minha-senha-do-email
+   API_KEY=abc123
+   ```
+
+   Sem espaços em volta do `=` (a linha é ignorada se houver) e sem aspas em volta do valor.
+4. Faça um novo push (ou rode o pipeline de novo na aba **Actions**).
+
+A partir daí o app recebe cada linha como uma variável de ambiente e lê do jeito
+normal da linguagem: `process.env.API_KEY` (Node.js), `os.environ["API_KEY"]`
+(Python), `System.getenv("API_KEY")` (Java), `getenv('API_KEY')` (PHP).
+
+Para trocar um valor, edite o secret `APP_ENV` e faça outro push. O GitHub não
+mostra o conteúdo antigo: escreva de novo todas as linhas. Uma variável que você
+tirar do `APP_ENV` continua valendo com o último valor; para anulá-la, deixe a
+linha com o valor vazio (`NOME=`).
+
+### `SECRET_KEY`: uma chave que o cluster cria para você
+
+Apps com login precisam de um texto secreto para **assinar** os tokens (JWT) ou
+os cookies de sessão: é o que impede alguém de forjar um login. Você não precisa
+inventar nem cadastrar esse texto. No primeiro deploy, o pipeline sorteia uma
+chave aleatória para o seu namespace e a entrega ao app na variável de ambiente
+`SECRET_KEY`; ela continua a mesma nos deploys seguintes, então os logins não
+caem a cada push.
+
+Basta o app ler essa variável onde configuraria o segredo do JWT ou da sessão.
+Veja nos exemplos:
+[JavaScript](exemplos/sem-dockerfile/fullstack-javascript/backend/server.js#L16),
+[TypeScript](exemplos/sem-dockerfile/fullstack-typescript/backend/src/server.ts#L12),
+[Python](exemplos/sem-dockerfile/fullstack-python/backend/main.py#L19) e
+[Java](exemplos/sem-dockerfile/fullstack-java/backend/src/main/resources/application.yml#L21).
+Se o app não tem login, ignore-a. Para usar uma chave sua, ponha uma linha
+`SECRET_KEY=...` no `APP_ENV`.
 
 ## Exemplos prontos
 
