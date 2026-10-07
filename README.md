@@ -37,12 +37,12 @@ Sem `Dockerfile`, o repositório precisa ter:
 
 | Projeto | O que o repositório precisa ter |
 |---------|--------------------------------|
-| Node.js | `package.json` com o script `start`; o app escuta em `process.env.PORT` |
-| Python | `requirements.txt` e um arquivo `Procfile`, por exemplo: `web: gunicorn app:app --bind 0.0.0.0:$PORT` |
-| Java | `pom.xml` ou `build.gradle`, e **memória no `with:`**: `memory: 768`, ou `memory: 512` com um `project.toml` como [este](exemplos/fullstack-java/backend/project.toml) (o padrão de 256 MB não basta para a JVM). Usa Java 21, a menos que o `project.toml` peça outra versão ([exemplo](exemplos/api-java-mobile/project.toml)) |
-| PHP | `index.php` na raiz; extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/php)) |
-| Go | `go.mod` (até Go 1.26) |
-| Site estático | `index.html` na raiz |
+| Node.js | `package.json` com o script `start` ([exemplo](exemplos/fullstack-javascript/backend/package.json)); o app escuta em `process.env.PORT`. TypeScript: o script `build` compila antes ([exemplo](exemplos/fullstack-typescript/backend/package.json)) |
+| Python | `requirements.txt` ([exemplo](exemplos/fullstack-python/backend/requirements.txt)) e um arquivo `Procfile` com o comando que sobe o app, como `web: gunicorn app:app --bind 0.0.0.0:$PORT` ([exemplo](exemplos/fullstack-python/backend/Procfile)) |
+| Java | `pom.xml` ([exemplo](exemplos/fullstack-java/backend/pom.xml)) ou `build.gradle`, e **memória no `with:`**: `memory: 768`, ou `memory: 512` com um `project.toml` como [este](exemplos/fullstack-java/backend/project.toml) (o padrão de 256 MB não basta para a JVM). Usa Java 21, a menos que o `project.toml` peça outra versão ([exemplo](exemplos/api-java-mobile/project.toml)) |
+| PHP | `index.php` na raiz ([exemplo](exemplos/php/index.php)); extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/php/.php.ini.d)) |
+| Go | `go.mod` (até Go 1.26) ([exemplo](exemplos/go/go.mod)) |
+| Site estático | `index.html` na raiz ([exemplo](exemplos/site/index.html)) |
 | .NET, Ruby | os arquivos normais do projeto |
 
 Com `Dockerfile` ([modelos por linguagem](exemplos/dockerfiles)), você controla a
