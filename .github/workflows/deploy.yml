@@ -52,8 +52,9 @@ on:
         type: string
         default: /health
       backend_memory:
+        description: Memória do backend (MB). Regra do cluster - o dobro do que o app usa de fato
         type: number
-        default: 512
+        default: 256
       database:
         description: Banco no MariaDB compartilhado do cluster (compatível com MySQL)
         type: boolean

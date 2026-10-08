@@ -110,7 +110,11 @@ O frontend alcança a API em `http://127.0.0.1:<backend_port>` (nos exemplos
 `fullstack-*`, o `nginx.conf` do frontend repassa `/api` para `http://127.0.0.1:8080`).
 Sem `Dockerfile`, as duas partes recebem a porta pela variável `PORT`: dê ao
 frontend uma porta diferente da do backend (por exemplo `port: 3000`).
-`backend_memory` (padrão `512`) ajusta a memória da API.
+`backend_memory` (padrão `256`) ajusta a memória da API. A regra do cluster é
+reservar cerca do **dobro do que o app usa de fato**: um backend em Node.js ou
+Python usa de 40 a 100 MB, então o padrão sobra; um backend Spring Boot precisa
+de `backend_memory: 320` (veja a linha do Java na tabela do passo 1). O passo
+**Logs do app** mostra `OOM Killed` quando falta memória.
 
 ### Banco de dados
 
