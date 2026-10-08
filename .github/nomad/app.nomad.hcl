@@ -39,9 +39,15 @@ variable "backend" {
 }
 
 variable "database" {
-  description = "MySQL em 127.0.0.1:3306, com DB_* e DATABASE_URL"
+  description = "Banco MariaDB (compatível com MySQL) em 127.0.0.1:3306, com DB_* e DATABASE_URL"
   type        = bool
   default     = false
+}
+
+# O banco e o usuário do namespace no MariaDB compartilhado do cluster têm o nome
+# do namespace, com "-" trocado por "_" (quem os cria é o painel do cluster)
+locals {
+  db = replace(var.namespace, "-", "_")
 }
 
 job "app" {
@@ -89,7 +95,7 @@ job "app" {
             }
 
             dynamic "upstreams" {
-              for_each = var.database ? ["${var.namespace}-mysql"] : []
+              for_each = var.database ? ["mariadb"] : []
               content {
                 destination_name = upstreams.value
                 local_bind_port  = 3306
@@ -133,9 +139,9 @@ job "app" {
         PORT = var.port
       }
 
-      # Os itens de nomad/jobs viram variáveis de ambiente (menos a senha root
-      # do MySQL, que só o mysql.nomad.hcl usa). Sem a variable (app sem
-      # segredos), o arquivo fica vazio e o app sobe normal.
+      # Os itens de nomad/jobs viram variáveis de ambiente (DB_ROOT_PASSWORD é
+      # resto do MySQL por namespace, que não existe mais). Sem a variable (app
+      # sem segredos), o arquivo fica vazio e o app sobe normal.
       template {
         data        = <<EOH
 {{ if nomadVarExists "nomad/jobs" -}}
@@ -143,15 +149,15 @@ job "app" {
 {{ range .Tuples }}{{ if ne .K "DB_ROOT_PASSWORD" }}{{ .K }}={{ .V }}
 {{ end }}{{ end -}}
 %{ if var.database ~}
-DATABASE_URL=mysql://app:{{ .DB_PASSWORD }}@127.0.0.1:3306/app
+DATABASE_URL=mysql://${local.db}:{{ .DB_PASSWORD }}@127.0.0.1:3306/${local.db}
 %{ endif ~}
 {{ end -}}
 {{ end -}}
 %{ if var.database ~}
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_NAME=app
-DB_USER=app
+DB_NAME=${local.db}
+DB_USER=${local.db}
 %{ endif ~}
 EOH
         destination = "secrets/app.env"

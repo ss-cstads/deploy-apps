@@ -86,7 +86,7 @@ Só existe um bloco `with:`; ponha nele todas as opções que for usar:
 | `port` | `8080` | porta do app (sem Dockerfile, o app recebe a variável `PORT` com esse valor) |
 | `health` | `/` | rota que responde 200 quando o app está funcionando |
 | `memory` | `256` | memória em MB (Java: no mínimo `320`, veja a tabela do passo 1) |
-| `database` | `false` | `true` cria um MySQL; o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
+| `database` | `false` | `true` liga o app ao seu banco no MariaDB do cluster (compatível com MySQL: mesmos drivers e mesmo SQL); o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
 
 ### App em subpastas (frontend + backend)
 
@@ -102,7 +102,7 @@ público é o do frontend:
       backend: backend          # pasta da API
       backend_port: 8080
       backend_health: /health   # rota da API que responde 200
-      database: true            # se a API usa MySQL
+      database: true            # se a API usa banco (MariaDB/MySQL)
 ```
 
 O frontend alcança a API em `http://127.0.0.1:<backend_port>` (nos exemplos
@@ -110,6 +110,23 @@ O frontend alcança a API em `http://127.0.0.1:<backend_port>` (nos exemplos
 Sem `Dockerfile`, as duas partes recebem a porta pela variável `PORT`: dê ao
 frontend uma porta diferente da do backend (por exemplo `port: 3000`).
 `backend_memory` (padrão `512`) ajusta a memória da API.
+
+### Banco de dados
+
+Com `database: true`, o app usa um banco **MariaDB** que já existe no cluster:
+cada namespace tem o seu banco e o seu usuário, criados junto com a sua conta. O
+MariaDB é compatível com o MySQL, então os drivers, as bibliotecas e o SQL são
+os mesmos (os exemplos "+ MySQL" funcionam sem mudança). O app recebe o acesso
+pronto nas variáveis `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` e `DB_PASSWORD`
+(e em `DATABASE_URL`); não há senha para cadastrar.
+
+- O servidor é compartilhado: cada usuário tem até 20 conexões abertas e 60
+  segundos por consulta. Um pool pequeno (5 conexões) é suficiente.
+- Você só enxerga o seu banco; não dá para criar outros.
+- Cópia de segurança, restauração de um arquivo `.sql` e limpeza do banco são
+  feitas pelo professor, no painel do cluster.
+- O banco fica fora do seu app: publicar outra versão, ou outro app no mesmo
+  namespace, encontra os mesmos dados.
 
 ## Variáveis, senhas e chaves do app
 
@@ -241,7 +258,7 @@ passo que ficou vermelho.
 - **`permission_denied: write_package`:** sobrou uma imagem de um repositório apagado com
   o mesmo nome. Apague-a em **github.com/<seu-usuário>?tab=packages**.
 - **O deploy falhou ou o app não abre:** abra o passo **Logs do app**, o último da
-  execução. Ele mostra, para cada parte (`web`, `api`, `mysql`), o estado no
+  execução. Ele mostra, para cada parte (`web`, `api`), o estado no
   cluster e as últimas linhas que o app escreveu. As causas mais comuns:
   - `port` diferente da porta em que o app escuta;
   - a rota de `health` não responde 200;

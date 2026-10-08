@@ -55,7 +55,7 @@ on:
         type: number
         default: 512
       database:
-        description: Cria um MySQL com dados persistentes
+        description: Banco no MariaDB compartilhado do cluster (compatível com MySQL)
         type: boolean
         default: false
 
@@ -209,8 +209,9 @@ jobs:
           sparse-checkout: .github/nomad
 
       # Segredos do app na Nomad Variable nomad/jobs (lida por todos os jobs do
-      # namespace): linhas NOME=valor do APP_ENV + SECRET_KEY e senhas do banco,
-      # geradas uma única vez (o MySQL grava as senhas ao inicializar o volume).
+      # namespace): linhas NOME=valor do APP_ENV + SECRET_KEY, gerada uma única
+      # vez. A senha do banco (DB_PASSWORD) NÃO nasce aqui: o painel do cluster a
+      # grava nesta variable quando cria o banco do namespace no MariaDB compartilhado.
       - name: Segredos do app
         env:
           APP_ENV: ${{ secrets.APP_ENV }}
@@ -221,11 +222,14 @@ jobs:
           gen() { openssl rand -hex "$1"; }
           items=$(jq -c \
             --argjson app "$(printf '%s\n' "$APP_ENV" | tr -d '\r' | jq -Rn '[inputs | capture("^\\s*(?<k>[A-Za-z_][A-Za-z0-9_]*)=(?<v>.*)$")? | {(.k): .v}] | add // {}')" \
-            --arg sk "$(gen 32)" --arg dbp "$(gen 16)" --arg dbr "$(gen 16)" --arg db "$DATABASE" '
+            --arg sk "$(gen 32)" '
               . + $app
               | .SECRET_KEY //= $sk
-              | if $db == "true" then (.DB_PASSWORD //= $dbp | .DB_ROOT_PASSWORD //= $dbr) else . end
             ' <<<"$current")
+          if [ "$DATABASE" = true ] && [ -z "$(jq -r '.DB_PASSWORD // empty' <<<"$items")" ]; then
+            echo "::error::O seu namespace ainda não tem banco de dados (falta a senha DB_PASSWORD). Peça ao professor para criar o banco do namespace '$NS' no painel do cluster e rode o pipeline de novo."
+            exit 1
+          fi
           jq -r '.[]' <<<"$items" | while IFS= read -r v; do [ -n "$v" ] && echo "::add-mask::$v"; done
           if [ "$items" != "$current" ]; then
             jq -n --argjson items "$items" '{Items: $items}' | nomad var put -namespace "$NS" -force -in json nomad/jobs - >/dev/null
@@ -234,11 +238,8 @@ jobs:
             echo "Segredos sem mudança"
           fi
 
-      # nomad job run acompanha o deploy: falha se a versão nova não ficar saudável
-      - name: Deploy do banco
-        if: inputs.database
-        run: nomad job run -var namespace="$NS" .deploy/.github/nomad/mysql.nomad.hcl
-
+      # nomad job run acompanha o deploy: falha se a versão nova não ficar saudável.
+      # Não há job de banco: database: true liga o app ao MariaDB compartilhado.
       - name: Deploy do backend
         if: inputs.backend != ''
         run: |
@@ -278,7 +279,7 @@ jobs:
       - name: Logs do app
         if: always() && env.NS != ''
         env:
-          JOBS: web ${{ inputs.backend != '' && 'api' || '' }} ${{ inputs.database && 'mysql' || '' }}
+          JOBS: web ${{ inputs.backend != '' && 'api' || '' }}
         run: |
           api() { curl -sS -m 20 -H "X-Nomad-Token: $NOMAD_TOKEN" "$NOMAD_ADDR$1"; }
           for job in $JOBS; do
