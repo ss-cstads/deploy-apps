@@ -39,7 +39,7 @@ Sem `Dockerfile`, o repositório precisa ter:
 |---------|--------------------------------|
 | Node.js | `package.json` com o script `start` ([exemplo](exemplos/sem-dockerfile/fullstack-javascript/backend/package.json)); o app escuta em `process.env.PORT`. TypeScript: o script `build` compila antes ([exemplo](exemplos/sem-dockerfile/fullstack-typescript/backend/package.json)) |
 | Python | `requirements.txt` ([exemplo](exemplos/sem-dockerfile/fullstack-python/backend/requirements.txt)) e um arquivo `Procfile` com o comando que sobe o app, como `web: gunicorn app:app --bind 0.0.0.0:$PORT` ([exemplo](exemplos/sem-dockerfile/fullstack-python/backend/Procfile)) |
-| Java | `pom.xml` ([exemplo](exemplos/sem-dockerfile/fullstack-java/backend/pom.xml)) ou `build.gradle`, e **memória no `with:`**: `memory: 768`, ou `memory: 512` com um `project.toml` como [este](exemplos/sem-dockerfile/fullstack-java/backend/project.toml) (o padrão de 256 MB não basta para a JVM). Usa Java 21, a menos que o `project.toml` peça outra versão ([exemplo](exemplos/sem-dockerfile/api-java-mobile/project.toml)) |
+| Java | `pom.xml` ([exemplo](exemplos/sem-dockerfile/fullstack-java/backend/pom.xml)) ou `build.gradle`, mais um `project.toml` que escolhe a versão do Java e deixa a JVM enxuta ([exemplo](exemplos/sem-dockerfile/fullstack-java/backend/project.toml)). Com ele, Spring Boot pede `memory: 320` no `with:`, e Quarkus, Micronaut ou Javalin cabem nos 256 MB padrão; sem ele, a JVM só sobe com `memory: 768`. Para um executável nativo (GraalVM), veja o exemplo [`java-graalvm`](exemplos/sem-dockerfile/java-graalvm) |
 | PHP | `index.php` na raiz ([exemplo](exemplos/sem-dockerfile/php/index.php)); extensões (MySQL etc.) em `.php.ini.d/` ([exemplo](exemplos/sem-dockerfile/php/.php.ini.d)) |
 | Go | `go.mod` (até Go 1.26) ([exemplo](exemplos/sem-dockerfile/go/go.mod)) |
 | Site estático | `index.html` na raiz ([exemplo](exemplos/sem-dockerfile/site/index.html)) |
@@ -85,7 +85,7 @@ Só existe um bloco `with:`; ponha nele todas as opções que for usar:
 |-------|--------|----------------|
 | `port` | `8080` | porta do app (sem Dockerfile, o app recebe a variável `PORT` com esse valor) |
 | `health` | `/` | rota que responde 200 quando o app está funcionando |
-| `memory` | `256` | memória em MB (Java: no mínimo `512`, veja a tabela do passo 1) |
+| `memory` | `256` | memória em MB (Java: no mínimo `320`, veja a tabela do passo 1) |
 | `database` | `false` | `true` cria um MySQL; o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
 
 ### App em subpastas (frontend + backend)
@@ -183,6 +183,10 @@ O mais simples: o pipeline reconhece o projeto pelos arquivos e monta a imagem.
 | [`go`](exemplos/sem-dockerfile/go) | API JSON em Go, só com a biblioteca padrão |
 | [`ruby`](exemplos/sem-dockerfile/ruby) | API JSON em Ruby (Sinatra) |
 | [`dotnet`](exemplos/sem-dockerfile/dotnet) | API JSON em C# (ASP.NET Core) |
+| [`java-graalvm`](exemplos/sem-dockerfile/java-graalvm) | API JSON em Java puro, compilada em executável nativo (GraalVM): sobe com 64 MB |
+| [`java-quarkus`](exemplos/sem-dockerfile/java-quarkus) | API JSON em Java com Quarkus |
+| [`java-micronaut`](exemplos/sem-dockerfile/java-micronaut) | API JSON em Java com Micronaut |
+| [`java-javalin`](exemplos/sem-dockerfile/java-javalin) | API JSON em Java com Javalin |
 | [`api-java-mobile`](exemplos/sem-dockerfile/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
 | [`fullstack-java`](exemplos/sem-dockerfile/fullstack-java) | React + Spring Boot + MySQL |
 | [`fullstack-javascript`](exemplos/sem-dockerfile/fullstack-javascript) | React + Express + MySQL |
@@ -213,6 +217,10 @@ base, os pacotes e o comando de início.
 | [`go`](exemplos/com-dockerfile/go) | API JSON em Go, só com a biblioteca padrão |
 | [`ruby`](exemplos/com-dockerfile/ruby) | API JSON em Ruby (Sinatra) |
 | [`dotnet`](exemplos/com-dockerfile/dotnet) | API JSON em C# (ASP.NET Core) |
+| [`java-graalvm`](exemplos/com-dockerfile/java-graalvm) | API JSON em Java puro, compilada em executável nativo (GraalVM): sobe com 64 MB |
+| [`java-quarkus`](exemplos/com-dockerfile/java-quarkus) | API JSON em Java com Quarkus |
+| [`java-micronaut`](exemplos/com-dockerfile/java-micronaut) | API JSON em Java com Micronaut |
+| [`java-javalin`](exemplos/com-dockerfile/java-javalin) | API JSON em Java com Javalin |
 | [`api-java-mobile`](exemplos/com-dockerfile/api-java-mobile) | API REST em Spring Boot + MySQL para um app mobile, com documentação em `/docs` |
 | [`fullstack-java`](exemplos/com-dockerfile/fullstack-java) | React + Spring Boot + MySQL |
 | [`fullstack-javascript`](exemplos/com-dockerfile/fullstack-javascript) | React + Express + MySQL |

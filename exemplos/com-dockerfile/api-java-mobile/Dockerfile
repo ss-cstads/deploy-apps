@@ -37,8 +37,13 @@ EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=30s --retries=3 \
   CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
+# JVM enxuta para protótipo acadêmico (cabe em 320 MB, medido com carga):
+# coletor serial, só o compilador rápido, cache de código e pilhas menores,
+# cabeçalhos de objeto compactos (Java 25), heap até 35% da memória do container.
 ENTRYPOINT ["java", \
-  "-XX:+UseContainerSupport", \
-  "-XX:MaxRAMPercentage=75.0", \
+  "-XX:+UseSerialGC", "-XX:TieredStopAtLevel=1", \
+  "-XX:ReservedCodeCacheSize=48M", "-Xss512k", \
+  "-XX:+UseCompactObjectHeaders", \
+  "-XX:MaxRAMPercentage=35.0", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-jar", "app.jar"]

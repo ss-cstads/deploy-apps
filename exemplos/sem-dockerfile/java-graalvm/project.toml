@@ -1,0 +1,13 @@
+# Pede ao pipeline um executável NATIVO (GraalVM) em vez de rodar o jar numa JVM.
+# O build demora mais (alguns minutos), mas o app sobe na hora e usa poucos MB.
+[_]
+schema-version = "0.2"
+
+# Java 25 (o padrão do pipeline é o 21)
+[[io.buildpacks.build.env]]
+name = "BP_JVM_VERSION"
+value = "25"
+
+[[io.buildpacks.build.env]]
+name = "BP_NATIVE_IMAGE"
+value = "true"

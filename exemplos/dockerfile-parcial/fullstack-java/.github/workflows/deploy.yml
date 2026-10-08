@@ -20,5 +20,5 @@ jobs:
       health: /health
       backend: backend
       backend_health: /actuator/health
-      backend_memory: 512   # Java precisa de 512 MB (com o backend/project.toml); sem ele, 768
+      backend_memory: 320   # o backend Java cabe em 320 MB com a JVM enxuta deste exemplo
       database: true

@@ -36,5 +36,5 @@ autenticação antes de usar de verdade.
 src/main/java/br/edu/ifsul/api/   código (entidade, repositório, controller)
 src/main/resources/application.yml  banco (DB_*) e porta (PORT) vêm do cluster
 Dockerfile                         build com Maven e Java 25; roda só com o JRE
-.github/workflows/deploy.yml       pipeline: health /actuator/health, 512 MB, database: true
+.github/workflows/deploy.yml       pipeline: health /actuator/health, 320 MB, database: true
 ```

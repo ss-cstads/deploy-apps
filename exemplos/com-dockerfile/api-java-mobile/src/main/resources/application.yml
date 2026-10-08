@@ -2,10 +2,15 @@
 # Não troque nada para publicar: o texto depois de cada ":" é só a reserva para
 # rodar na sua máquina.
 spring:
+  threads:
+    virtual:
+      enabled: true   # threads virtuais (Java 21+): cada requisição numa thread leve, sem um conjunto fixo de threads
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:app}?allowPublicKeyRetrieval=true&useSSL=false
     username: ${DB_USER:app}
     password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 5     # conexões com o banco (o padrão é 10)
   jpa:
     hibernate:
       ddl-auto: update

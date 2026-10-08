@@ -35,6 +35,6 @@ autenticação antes de usar de verdade.
 ```
 src/main/java/br/edu/ifsul/api/   código (entidade, repositório, controller)
 src/main/resources/application.yml  banco (DB_*) e porta (PORT) vêm do cluster
-project.toml                       versão do Java para o build (25)
-.github/workflows/deploy.yml       pipeline: health /actuator/health, 768 MB, database: true
+project.toml                       versão do Java (25) e JVM enxuta, para caber em 320 MB
+.github/workflows/deploy.yml       pipeline: health /actuator/health, 320 MB, database: true
 ```

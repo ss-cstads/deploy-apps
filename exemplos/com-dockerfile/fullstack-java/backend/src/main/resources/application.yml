@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: true   # threads virtuais (Java 21+): cada requisição numa thread leve, sem um conjunto fixo de threads
   application:
     name: task-api
   # Banco: no cluster (database: true no deploy.yml) as variáveis DB_* já vêm
@@ -9,6 +12,8 @@ spring:
     username: ${DB_USER:app}
     password: ${DB_PASSWORD:senha-do-mysql-da-sua-maquina}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5     # conexões com o banco (o padrão é 10)
   jpa:
     hibernate:
       ddl-auto: update

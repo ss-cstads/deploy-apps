@@ -16,5 +16,5 @@ jobs:
       APP_ENV: ${{ secrets.APP_ENV }}
     with:
       health: /actuator/health
-      memory: 768
+      memory: 320
       database: true

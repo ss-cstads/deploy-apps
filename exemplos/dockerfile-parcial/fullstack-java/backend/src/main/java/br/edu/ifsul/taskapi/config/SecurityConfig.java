@@ -38,6 +38,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                // página de erro do Spring: sem isto, um JSON inválido (400) apareceria como 401
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             )
             // sem token ou com token invalido/vencido: 401 com JSON, como os outros backends.

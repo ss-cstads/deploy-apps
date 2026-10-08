@@ -1,0 +1,21 @@
+# Exemplo: API de mensagens em Java com Javalin
+
+API JSON em Java com o Javalin, um framework web pequeno: as rotas são funções, sem anotações nem injeção de dependência. Com `Dockerfile`. Copie o conteúdo desta
+pasta para a raiz do seu repositório, cadastre o `NOMAD_TOKEN`
+([passo 2](../../../README.md#2-cadastre-o-seu-token)) e faça push.
+
+| Método | Rota | O que faz |
+|--------|------|-----------|
+| `GET` | `/api/mensagens` | lista as mensagens |
+| `POST` | `/api/mensagens` | cria uma mensagem: `{"texto": "olá"}` |
+
+```bash
+curl -X POST https://<seu-namespace>.projetos.sapucaia.ifsul.edu.br/api/mensagens \
+  -H 'Content-Type: application/json' -d '{"texto": "olá"}'
+```
+
+As mensagens ficam em memória e somem quando o app reinicia. Para guardá-las, use
+`database: true` no `deploy.yml` e grave no MySQL (veja o exemplo `api-java-mobile`).
+
+O `Dockerfile` compila com o Maven (Java 25) e roda só com o JRE, com a JVM
+enxuta (coletor de lixo serial, menos memória reservada) para caber nos 256 MB padrão.
