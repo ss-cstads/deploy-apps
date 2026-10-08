@@ -99,6 +99,7 @@ público é o do frontend:
     with:
       frontend: frontend        # pasta do site
       port: 80                  # porta do frontend
+      memory: 64                # memória do frontend (um nginx usa uns 20 MB)
       backend: backend          # pasta da API
       backend_port: 8080
       backend_health: /health   # rota da API que responde 200

@@ -103,6 +103,17 @@ job "app" {
             }
           }
         }
+
+        # Reserva do proxy da malha (Envoy). O padrão do Nomad é 250 MHz e 128 MB
+        # por proxy; medido no cluster, cada um usa ~20 MB e quase nada de CPU.
+        # A CPU é garantia mínima (o proxy usa mais se o nó estiver ocioso); a
+        # memória é teto.
+        sidecar_task {
+          resources {
+            cpu    = 50
+            memory = 64
+          }
+        }
       }
 
       check {

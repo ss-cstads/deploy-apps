@@ -17,6 +17,7 @@ jobs:
     with:
       frontend: frontend
       port: 80
+      memory: 64                # o frontend é só o nginx: usa uns 20 MB
       health: /health
       backend: backend
       backend_health: /actuator/health
