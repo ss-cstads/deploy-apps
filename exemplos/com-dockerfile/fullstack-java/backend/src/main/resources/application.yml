@@ -8,18 +8,14 @@ spring:
   # prontas, com a senha sorteada pelo pipeline: não troque nada para publicar.
   # O texto depois de cada ":" é só a reserva para rodar na sua máquina.
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:app}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:app}
     username: ${DB_USER:app}
-    password: ${DB_PASSWORD:senha-do-mysql-da-sua-maquina}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: ${DB_PASSWORD:senha-do-banco-da-sua-maquina}
     hikari:
       maximum-pool-size: 5     # conexões com o banco (o padrão é 10)
   jpa:
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
 
 server:

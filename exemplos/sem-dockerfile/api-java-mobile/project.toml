@@ -21,3 +21,9 @@ value = " "
 [[io.buildpacks.build.env]]
 name = "BPE_APPEND_JAVA_TOOL_OPTIONS"
 value = "-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48M -Xss512k -XX:+UseCompactObjectHeaders"
+
+# Sem o relatório de memória que a JVM imprime ao sair: ele ocupava as últimas
+# linhas do log e escondia o erro quando o app caía ao iniciar
+[[io.buildpacks.build.env]]
+name = "BPE_BPL_JAVA_NMT_ENABLED"
+value = "false"
