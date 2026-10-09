@@ -111,7 +111,7 @@ job "app" {
         # memória é teto.
         sidecar_task {
           resources {
-            cpu        = 50
+            cpu        = 25
             memory     = 32
             memory_max = 64
           }
@@ -145,7 +145,7 @@ job "app" {
       # conta para decidir quantos apps cabem); `memory_max`, o dobro, é o teto que
       # o derruba. O app pode passar da reserva enquanto o nó tiver memória livre.
       resources {
-        cpu        = 200
+        cpu        = 100
         memory     = var.memory
         memory_max = var.memory * 2
       }
