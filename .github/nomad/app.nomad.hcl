@@ -110,8 +110,9 @@ job "app" {
         # memória é teto.
         sidecar_task {
           resources {
-            cpu    = 50
-            memory = 64
+            cpu        = 50
+            memory     = 64
+            memory_max = 128
           }
         }
       }
@@ -139,15 +140,27 @@ job "app" {
         ports = ["http"]
       }
 
+      # Memória elástica: `memory` é o que o cluster reserva para o app (e o que
+      # conta para decidir quantos apps cabem); `memory_max`, o dobro, é o teto que
+      # o derruba. O app pode passar da reserva enquanto o nó tiver memória livre.
       resources {
-        cpu    = 200
-        memory = var.memory
+        cpu        = 200
+        memory     = var.memory
+        memory_max = var.memory * 2
       }
 
       # Porta em que o app deve escutar (convenção dos Buildpacks; apps com
       # Dockerfile próprio podem ignorar)
       env {
         PORT = var.port
+        # JVM: o limite que o container enxerga agora é o teto (2 x a reserva), e a
+        # JVM dimensionaria o heap por ele. Estas duas variáveis a fazem calcular a
+        # memória pela RESERVA; o resto do teto fica de folga para picos.
+        #   - imagens do pipeline (Buildpacks): metade do limite fica de fora da conta
+        #   - imagens com Dockerfile: a JVM considera a reserva como a memória da máquina
+        # Não afetam apps que não são Java.
+        BPL_JVM_HEAD_ROOM = "50"
+        JAVA_TOOL_OPTIONS = "-XX:MaxRAM=${var.memory}m"
       }
 
       # Os itens de nomad/jobs viram variáveis de ambiente (DB_ROOT_PASSWORD é
