@@ -17,7 +17,7 @@ jobs:
     with:
       frontend: frontend
       port: 3000   # porta do frontend (a 8080 é do backend)
-      memory: 64                # o frontend é só o nginx: usa uns 20 MB
+      memory: 16                # o frontend é só o nginx: usa de 3 a 8 MB (o teto é o dobro: 32)
       health: /health
       backend: backend
       backend_health: /actuator/health

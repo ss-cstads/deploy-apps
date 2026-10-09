@@ -85,7 +85,7 @@ Só existe um bloco `with:`; ponha nele todas as opções que for usar:
 |-------|--------|----------------|
 | `port` | `8080` | porta do app (sem Dockerfile, o app recebe a variável `PORT` com esse valor) |
 | `health` | `/` | rota que responde 200 quando o app está funcionando |
-| `memory` | `256` | memória em MB (Java: no mínimo `320`, veja a tabela do passo 1) |
+| `memory` | `256` | memória reservada para o app, em MB; ele pode usar até o **dobro** disso antes de ser derrubado. Reserve perto do que o app usa de fato (Java: no mínimo `320`, veja a tabela do passo 1) |
 | `database` | `false` | `true` liga o app ao seu banco no MariaDB do cluster (compatível com MySQL: mesmos drivers e mesmo SQL); o app recebe `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `DATABASE_URL` |
 
 ### App em subpastas (frontend + backend)
@@ -99,7 +99,7 @@ público é o do frontend:
     with:
       frontend: frontend        # pasta do site
       port: 80                  # porta do frontend
-      memory: 64                # memória do frontend (um nginx usa uns 20 MB)
+      memory: 16                # memória do frontend (um nginx usa de 3 a 8 MB)
       backend: backend          # pasta da API
       backend_port: 8080
       backend_health: /health   # rota da API que responde 200
@@ -111,7 +111,7 @@ O frontend alcança a API em `http://127.0.0.1:<backend_port>` (nos exemplos
 Sem `Dockerfile`, as duas partes recebem a porta pela variável `PORT`: dê ao
 frontend uma porta diferente da do backend (por exemplo `port: 3000`).
 `backend_memory` (padrão `256`) ajusta a memória da API. A regra do cluster é
-reservar cerca do **dobro do que o app usa de fato**: um backend em Node.js ou
+reservar **perto do que o app usa de fato** (o teto, que derruba o app, é sempre o dobro da reserva): um backend em Node.js ou
 Python usa de 40 a 100 MB, então o padrão sobra; um backend Spring Boot precisa
 de `backend_memory: 320` (veja a linha do Java na tabela do passo 1). O passo
 **Logs do app** mostra `OOM Killed` quando falta memória.
