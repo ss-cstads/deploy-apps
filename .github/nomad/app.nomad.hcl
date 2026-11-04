@@ -110,6 +110,9 @@ job "app" {
         # A CPU é garantia mínima (o proxy usa mais se o nó estiver ocioso); a
         # memória é teto.
         sidecar_task {
+          env {
+            TZ = "America/Sao_Paulo" # o Envoy também no fuso do cluster
+          }
           resources {
             cpu        = 25
             memory     = 32
