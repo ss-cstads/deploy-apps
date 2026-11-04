@@ -154,6 +154,10 @@ job "app" {
       # Dockerfile próprio podem ignorar)
       env {
         PORT = var.port
+        # Fuso de Brasília, o mesmo das VMs do cluster: sem isto o container fica
+        # em UTC e datas e logs do app saem 3 h à frente. Um segredo TZ em
+        # nomad/jobs (o template abaixo) troca por outro, se o app precisar.
+        TZ = "America/Sao_Paulo"
         # JVM: o limite que o container enxerga agora é o teto (2 x a reserva), e a
         # JVM dimensionaria o heap por ele. Estas duas variáveis a fazem calcular a
         # memória pela RESERVA; o resto do teto fica de folga para picos.
@@ -173,17 +177,17 @@ job "app" {
 {{ with nomadVar "nomad/jobs" -}}
 {{ range .Tuples }}{{ if ne .K "DB_ROOT_PASSWORD" }}{{ .K }}={{ .V }}
 {{ end }}{{ end -}}
-%{ if var.database ~}
+%{if var.database~}
 DATABASE_URL=mysql://${local.db}:{{ .DB_PASSWORD }}@127.0.0.1:3306/${local.db}
-%{ endif ~}
+%{endif~}
 {{ end -}}
 {{ end -}}
-%{ if var.database ~}
+%{if var.database~}
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=${local.db}
 DB_USER=${local.db}
-%{ endif ~}
+%{endif~}
 EOH
         destination = "secrets/app.env"
         env         = true
